@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Rank",
+    "slug": "rank",
+    "icon": "👑",
+    "color": "orange",
+    "description": "Rank eksklusif",
+    "sort_order": 1,
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "name": "Weapon",
+    "slug": "weapon",
+    "icon": "⚔️",
+    "color": "red",
+    "description": "Senjata powerful",
+    "sort_order": 2,
+    "is_active": true
+  },
+  {
+    "id": 3,
+    "name": "SellWand",
+    "slug": "sellwand",
+    "icon": "🪄",
+    "color": "green",
+    "description": "Jual item otomatis",
+    "sort_order": 3,
+    "is_active": true
+  },
+  {
+    "id": 4,
+    "name": "AuraSkills",
+    "slug": "auraskills",
+    "icon": "✨",
+    "color": "purple",
+    "description": "Boost skill RPG",
+    "sort_order": 4,
+    "is_active": true
+  },
+  {
+    "id": 5,
+    "name": "Crate Key",
+    "slug": "crate-key",
+    "icon": "🗝️",
+    "color": "yellow",
+    "description": "Kunci crate langka",
+    "sort_order": 5,
+    "is_active": true
+  },
+  {
+    "id": 6,
+    "name": "Kit",
+    "slug": "kit",
+    "icon": "🎒",
+    "color": "blue",
+    "description": "Starter kit",
+    "sort_order": 6,
+    "is_active": true
+  }
+]

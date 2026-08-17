@@ -1,0 +1,16 @@
+FANCY NETWORK V6 — STABLE START
+
+1. Open CMD in this folder.
+2. Run:
+   npm install
+   npm run dev
+
+IMPORTANT:
+- In V6, `npm run dev` intentionally performs `next build` + `next start`.
+- It DOES NOT run `next dev`, therefore Fast Refresh/HMR is disabled.
+- There is intentionally no dev:hot script.
+- You can also double-click RUN_STABLE_WINDOWS.bat.
+
+Open: http://localhost:3000
+
+If your terminal still prints "Fast Refresh", you are running a different/older folder or an old Next.js process. Stop all old servers with Ctrl+C before starting V6.

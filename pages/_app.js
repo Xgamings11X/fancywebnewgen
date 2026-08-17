@@ -1,0 +1,151 @@
+import '../styles/globals.css';
+import '../styles/fancy-network.css';
+import { useEffect, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
+
+function safeBackgroundUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return '';
+  const candidate = value.trim();
+  if (/[\\'"<>\r\n]/.test(candidate)) return '';
+  if (/^\/[A-Za-z0-9_./%-]+$/.test(candidate)) return candidate;
+  try {
+    const url = new URL(candidate);
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Scroll-reveal observer — dibuat SEKALI untuk seluruh siklus hidup app.
+ * PERF FIX: versi sebelumnya membuat IntersectionObserver baru + querySelectorAll
+ * ulang di SETIAP render React (useEffect tanpa dependency array), yang berarti
+ * observer menumpuk dan DOM di-scan ulang terus-menerus tanpa alasan yang valid.
+ * Sekarang: 1 IntersectionObserver dipakai seumur hidup app, dan MutationObserver
+ * menangkap elemen [data-anim] baru yang dirender belakangan (mis. dari fetch async)
+ * tanpa perlu rebuild observer dari nol.
+ */
+function createScrollRevealObserver() {
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        el.classList.add('anim-visible');
+        io.unobserve(el);
+        // will-change hanya aktif selama transisi berlangsung, lalu dilepas.
+        // Mencegah elemen yang sudah selesai animasi tetap "menempel" di compositor
+        // layer GPU selamanya — penting untuk halaman panjang dengan banyak section.
+        el.style.willChange = 'opacity, transform';
+        const clearWillChange = () => { el.style.willChange = 'auto'; };
+        el.addEventListener('transitionend', clearWillChange, { once: true });
+        setTimeout(clearWillChange, 1200); // fallback jika transitionend tak terpicu
+      });
+    },
+    { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
+  );
+
+  const observeAll = (root) => {
+    root.querySelectorAll('[data-anim]:not(.anim-visible)').forEach((el) => io.observe(el));
+  };
+  observeAll(document);
+
+  const mo = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      m.addedNodes.forEach((node) => {
+        if (node.nodeType !== 1) return;
+        if (node.matches?.('[data-anim]')) io.observe(node);
+        node.querySelectorAll?.('[data-anim]:not(.anim-visible)').forEach((el) => io.observe(el));
+      });
+    }
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+
+  return () => { io.disconnect(); mo.disconnect(); };
+}
+
+export default function App({ Component, pageProps }) {
+  const [bgDesktop, setBgDesktop] = useState('');
+  const [bgMobile,  setBgMobile]  = useState('');
+
+  // ── Load background settings once on mount ──
+  useEffect(() => {
+    fetch('/api/store/settings', { credentials: 'same-origin' })
+      .then(r => { if (!r.ok) return null; return r.json(); })
+      .then(d => {
+        if (d && d.success && d.settings) {
+          setBgDesktop(safeBackgroundUrl(d.settings.bg_desktop));
+          setBgMobile(safeBackgroundUrl(d.settings.bg_mobile));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // ── One-time setup: page-transition overlay, scroll progress bar, scroll-reveal observer ──
+  // Dependency array kosong = dibuat sekali untuk seluruh app, BUKAN per render/per route.
+  useEffect(() => {
+    const bar = document.createElement('div');
+    bar.id = 'scroll-progress';
+    document.body.appendChild(bar);
+
+    const onScroll = () => {
+      const scrolled = window.scrollY;
+      const total    = document.documentElement.scrollHeight - window.innerHeight;
+      const pct      = total > 0 ? scrolled / total : 0;
+      bar.style.transform = `scaleX(${pct})`;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const cleanupObserver = createScrollRevealObserver();
+
+    // First paint hero entrance (tidak ada routeChangeComplete saat initial load)
+    const initialTimer = setTimeout(() => document.body.classList.add('page-loaded'), 80);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cleanupObserver();
+      clearTimeout(initialTimer);
+      bar.remove();
+    };
+  }, []);
+
+  // Route transitions intentionally disabled: public UI should feel instant and never flash an overlay.
+
+  return (
+    <>
+      {(bgDesktop || bgMobile) && (
+        <style>{`
+          body::before {
+            background-image: url('${bgDesktop || bgMobile}') !important;
+          }
+          ${bgMobile ? `
+          @media (max-width: 768px) {
+            body::before {
+              background-image: url('${bgMobile}') !important;
+              background-position: center center !important;
+            }
+          }` : ''}
+        `}</style>
+      )}
+      <Component {...pageProps} />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          style: {
+            background: '#ffffff',
+            color: '#101114',
+            border: '1px solid #dce2ea',
+            borderRadius: '14px',
+            boxShadow: '0 16px 40px rgba(16,17,20,0.14)',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontSize: 13,
+            fontWeight: 700,
+            padding: '12px 16px',
+          },
+          success: { iconTheme: { primary: '#16a34a', secondary: '#ffffff' } },
+          error:   { iconTheme: { primary: '#e03131', secondary: '#ffffff' } },
+        }}
+      />
+    </>
+  );
+}
