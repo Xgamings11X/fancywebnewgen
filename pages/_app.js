@@ -1,6 +1,6 @@
 import '../styles/globals.css';
 import '../styles/fancy-network.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 function safeBackgroundUrl(value) {
@@ -65,21 +65,16 @@ function createScrollRevealObserver() {
 }
 
 export default function App({ Component, pageProps }) {
-  const [bgDesktop, setBgDesktop] = useState('');
-  const [bgMobile,  setBgMobile]  = useState('');
-
-  // ── Load background settings once on mount ──
-  useEffect(() => {
-    fetch('/api/store/settings', { credentials: 'same-origin' })
-      .then(r => { if (!r.ok) return null; return r.json(); })
-      .then(d => {
-        if (d && d.success && d.settings) {
-          setBgDesktop(safeBackgroundUrl(d.settings.bg_desktop));
-          setBgMobile(safeBackgroundUrl(d.settings.bg_mobile));
-        }
-      })
-      .catch(() => {});
-  }, []);
+  // Public pages already receive settings from getServerSideProps.
+  // Reusing them here removes the extra /api/store/settings request + state update
+  // that previously happened on every first page load.
+  const { bgDesktop, bgMobile } = useMemo(() => {
+    const settings = pageProps?.settings || {};
+    return {
+      bgDesktop: safeBackgroundUrl(settings.bg_desktop),
+      bgMobile: safeBackgroundUrl(settings.bg_mobile),
+    };
+  }, [pageProps?.settings]);
 
   // ── One-time setup: page-transition overlay, scroll progress bar, scroll-reveal observer ──
   // Dependency array kosong = dibuat sekali untuk seluruh app, BUKAN per render/per route.
@@ -88,12 +83,19 @@ export default function App({ Component, pageProps }) {
     bar.id = 'scroll-progress';
     document.body.appendChild(bar);
 
-    const onScroll = () => {
+    let scrollFrame = 0;
+    const updateScrollProgress = () => {
+      scrollFrame = 0;
       const scrolled = window.scrollY;
-      const total    = document.documentElement.scrollHeight - window.innerHeight;
-      const pct      = total > 0 ? scrolled / total : 0;
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = total > 0 ? scrolled / total : 0;
       bar.style.transform = `scaleX(${pct})`;
     };
+    const onScroll = () => {
+      if (scrollFrame) return;
+      scrollFrame = window.requestAnimationFrame(updateScrollProgress);
+    };
+    updateScrollProgress();
     window.addEventListener('scroll', onScroll, { passive: true });
 
     const cleanupObserver = createScrollRevealObserver();
@@ -103,6 +105,7 @@ export default function App({ Component, pageProps }) {
 
     return () => {
       window.removeEventListener('scroll', onScroll);
+      if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
       cleanupObserver();
       clearTimeout(initialTimer);
       bar.remove();

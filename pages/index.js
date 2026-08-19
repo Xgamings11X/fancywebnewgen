@@ -229,7 +229,7 @@ export default function HomePage({ settings }) {
           <div className="fn-home-ambient" aria-hidden="true"/>
           <div className="fn-fancy-backdrop" aria-hidden="true">
             <div className="fn-fancy-backdrop-logo">
-              {s.logo_url ? <img src={s.logo_url} alt=""/> : <LogoImage alt=""/>}
+              {s.logo_url ? <img src={s.logo_url} alt="" width={64} height={64} decoding="async" fetchPriority="high"/> : <LogoImage alt="" fetchPriority="high"/>}
             </div>
             <span className="fn-pixel fn-pixel-a"/><span className="fn-pixel fn-pixel-b"/>
             <span className="fn-pixel fn-pixel-c"/><span className="fn-pixel fn-pixel-d"/>
@@ -280,7 +280,7 @@ export default function HomePage({ settings }) {
               <div className="fn-connect-topbar">
                 <div className="fn-connect-brand">
                   <div className="fn-connect-logo">
-                    {s.logo_url ? <img src={s.logo_url} alt=""/> : <LogoImage alt=""/>}
+                    {s.logo_url ? <img src={s.logo_url} alt="" width={64} height={64} decoding="async" fetchPriority="high"/> : <LogoImage alt="" fetchPriority="high"/>}
                   </div>
                   <div><small>CONNECT TO</small><strong>{serverName}</strong></div>
                 </div>
