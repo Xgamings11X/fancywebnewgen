@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "pnpm run build",
+  "buildCommand": "npm run build",
   "devCommand": "next dev",
   "regions": [
     "sin1"
