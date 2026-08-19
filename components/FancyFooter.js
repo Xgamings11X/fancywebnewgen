@@ -32,7 +32,7 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
       <div className="public-footer-top">
         <div className="public-footer-brand-block">
           <div className="public-footer-logo-row">
-            <span className="public-footer-logo">{s.logo_url ? <img src={s.logo_url} alt="" /> : <LogoImage alt="" />}</span>
+            <span className="public-footer-logo">{s.logo_url ? <img src={s.logo_url} alt="" width={64} height={64} loading="lazy" decoding="async" /> : <LogoImage alt="" loading="lazy" />}</span>
             <div><strong>{serverName}</strong><small>Survival Economy · Java &amp; Bedrock</small></div>
           </div>
           <p>Server Minecraft Indonesia dengan progression semi-RPG, ekonomi aktif, transaksi otomatis, dan support yang terhubung ke Discord.</p>

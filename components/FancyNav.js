@@ -24,28 +24,46 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
     : router.pathname === href || router.pathname.startsWith(`${href}/`);
 
   useEffect(() => {
+    let scrollFrame = 0;
+    const handleScroll = () => {
+      if (scrollFrame) return;
+      scrollFrame = window.requestAnimationFrame(() => {
+        scrollFrame = 0;
+        setScrolled(window.scrollY > 18);
+      });
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
+    };
+  }, []);
+
+  useEffect(() => {
     const closeMenu = () => setMenuOpen(false);
-    const handleScroll = () => setScrolled(window.scrollY > 18);
+    router.events.on('routeChangeStart', closeMenu);
+    return () => router.events.off('routeChangeStart', closeMenu);
+  }, [router.events]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const closeMenu = () => setMenuOpen(false);
     const handleKeyDown = event => {
       if (event.key === 'Escape') closeMenu();
     };
     const handlePointerDown = event => {
-      if (menuOpen && navRef.current && !navRef.current.contains(event.target)) closeMenu();
+      if (navRef.current && !navRef.current.contains(event.target)) closeMenu();
     };
 
-    handleScroll();
-    router.events.on('routeChangeStart', closeMenu);
-    window.addEventListener('scroll', handleScroll, { passive: true });
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('pointerdown', handlePointerDown);
-
     return () => {
-      router.events.off('routeChangeStart', closeMenu);
-      window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('pointerdown', handlePointerDown);
     };
-  }, [menuOpen, router.events]);
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -58,7 +76,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
     <nav ref={navRef} className={`public-nav${scrolled ? ' is-scrolled' : ''}`} aria-label="Navigasi utama">
       <Link href="/" className="public-nav-brand" aria-label={`${serverName} — Beranda`}>
         <span className="public-nav-logo">
-          {logoUrl ? <img src={logoUrl} alt="" /> : <LogoImage alt="" />}
+          {logoUrl ? <img src={logoUrl} alt="" width={64} height={64} decoding="async" fetchPriority="high" /> : <LogoImage alt="" fetchPriority="high" />}
         </span>
         <span className="public-nav-brand-copy">
           <strong>{serverName}</strong>
