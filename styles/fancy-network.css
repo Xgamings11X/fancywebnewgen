@@ -2287,3 +2287,28 @@ body {
     width:100% !important;
   }
 }
+
+/* ============================================================
+   PageSpeed / Lighthouse: below-the-fold rendering containment
+   Keeps every section and animation intact, but lets Chromium skip
+   layout/paint work for sections that are still far outside viewport.
+   ============================================================ */
+@supports (content-visibility: auto) {
+  .fancy-public-theme .landing-features,
+  .fancy-public-theme .landing-famous-program,
+  .fancy-public-theme .public-footer {
+    content-visibility: auto;
+  }
+
+  .fancy-public-theme .landing-features {
+    contain-intrinsic-size: auto 760px;
+  }
+
+  .fancy-public-theme .landing-famous-program {
+    contain-intrinsic-size: auto 620px;
+  }
+
+  .fancy-public-theme .public-footer {
+    contain-intrinsic-size: auto 760px;
+  }
+}

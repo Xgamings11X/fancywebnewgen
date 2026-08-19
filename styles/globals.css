@@ -6750,3 +6750,9 @@ html, body, * {
     padding: 9px 8px !important;
   }
 }
+
+/* PageSpeed: fixed background attachment causes extra mobile painting.
+   The same gradients remain visible; only the attachment mode changes on phones. */
+@media (max-width: 768px) {
+  body { background-attachment: scroll; }
+}
