@@ -12,13 +12,15 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import FancyNav from '../../components/FancyNav';
 import LogoImage, { useTransparentLogo } from '../../components/LogoImage';
-import LoginModal from '../../components/LoginModal';
 import Icon from '../../components/Icon';
+
+const LoginModal = dynamic(() => import('../../components/LoginModal'), { ssr: false });
 
 export async function getServerSideProps({ params }) {
   try {

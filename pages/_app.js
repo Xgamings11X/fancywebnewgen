@@ -2,6 +2,7 @@ import '../styles/globals.css';
 import '../styles/fancy-network.css';
 import { useEffect, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
+import Router from 'next/router';
 
 function safeBackgroundUrl(value) {
   if (typeof value !== 'string' || !value.trim()) return '';
@@ -65,14 +66,13 @@ function createScrollRevealObserver() {
 }
 
 export default function App({ Component, pageProps }) {
-  // Public pages already receive settings from getServerSideProps.
-  // Reusing them here removes the extra /api/store/settings request + state update
-  // that previously happened on every first page load.
+  // Public pages already receive settings through SSR. Reusing those props avoids
+  // a duplicate /api/store/settings request + state update on every first load.
   const { bgDesktop, bgMobile } = useMemo(() => {
-    const settings = pageProps?.settings || {};
+    const pageSettings = pageProps?.settings || {};
     return {
-      bgDesktop: safeBackgroundUrl(settings.bg_desktop),
-      bgMobile: safeBackgroundUrl(settings.bg_mobile),
+      bgDesktop: safeBackgroundUrl(pageSettings.bg_desktop),
+      bgMobile: safeBackgroundUrl(pageSettings.bg_mobile),
     };
   }, [pageProps?.settings]);
 
@@ -83,20 +83,76 @@ export default function App({ Component, pageProps }) {
     bar.id = 'scroll-progress';
     document.body.appendChild(bar);
 
+    // Lightweight GPU-only route wipe. It preserves the page-change animation
+    // without translating/fading the entire multi-screen React tree.
+    const overlay = document.createElement('div');
+    overlay.id = 'page-transition-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(overlay);
+
     let scrollFrame = 0;
-    const updateScrollProgress = () => {
+    let routePending = false;
+    let routeResetTimer = 0;
+    let overlayResetTimer = 0;
+    let overlayFrame = 0;
+    let lastScale = -1;
+
+    const updateScrollBar = () => {
       scrollFrame = 0;
-      const scrolled = window.scrollY;
+      if (routePending) return;
       const total = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = total > 0 ? scrolled / total : 0;
+      const pct = total > 0 ? Math.min(1, Math.max(0, window.scrollY / total)) : 0;
+      if (Math.abs(pct - lastScale) < 0.0015) return;
+      lastScale = pct;
       bar.style.transform = `scaleX(${pct})`;
     };
     const onScroll = () => {
-      if (scrollFrame) return;
-      scrollFrame = window.requestAnimationFrame(updateScrollProgress);
+      if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateScrollBar);
     };
-    updateScrollProgress();
+    const onRouteStart = () => {
+      routePending = true;
+      window.clearTimeout(routeResetTimer);
+      window.clearTimeout(overlayResetTimer);
+      if (overlayFrame) window.cancelAnimationFrame(overlayFrame);
+      overlay.classList.remove('finishing');
+      // Two rAFs guarantee the off-screen base state is committed without a
+      // synchronous layout read/forced reflow. Route changes are infrequent,
+      // but this keeps the transition clean even on slower mobile CPUs.
+      overlayFrame = window.requestAnimationFrame(() => {
+        overlayFrame = window.requestAnimationFrame(() => {
+          overlay.classList.add('transitioning');
+          overlayFrame = 0;
+        });
+      });
+      bar.classList.add('is-routing');
+      bar.style.transform = 'scaleX(.22)';
+    };
+    const onRouteDone = () => {
+      // A prefetched route can finish before the two-rAF entrance starts. Cancel
+      // that pending frame so it cannot re-add .transitioning after completion.
+      if (overlayFrame) {
+        window.cancelAnimationFrame(overlayFrame);
+        overlayFrame = 0;
+      }
+      bar.style.transform = 'scaleX(1)';
+      overlay.classList.remove('transitioning');
+      overlay.classList.add('finishing');
+      overlayResetTimer = window.setTimeout(() => {
+        overlay.classList.remove('finishing');
+      }, 230);
+      routeResetTimer = window.setTimeout(() => {
+        routePending = false;
+        bar.classList.remove('is-routing');
+        lastScale = -1;
+        updateScrollBar();
+      }, 110);
+    };
+
     window.addEventListener('scroll', onScroll, { passive: true });
+    Router.events.on('routeChangeStart', onRouteStart);
+    Router.events.on('routeChangeComplete', onRouteDone);
+    Router.events.on('routeChangeError', onRouteDone);
+    updateScrollBar();
 
     const cleanupObserver = createScrollRevealObserver();
 
@@ -105,14 +161,21 @@ export default function App({ Component, pageProps }) {
 
     return () => {
       window.removeEventListener('scroll', onScroll);
+      Router.events.off('routeChangeStart', onRouteStart);
+      Router.events.off('routeChangeComplete', onRouteDone);
+      Router.events.off('routeChangeError', onRouteDone);
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
+      if (overlayFrame) window.cancelAnimationFrame(overlayFrame);
+      window.clearTimeout(routeResetTimer);
+      window.clearTimeout(overlayResetTimer);
       cleanupObserver();
       clearTimeout(initialTimer);
       bar.remove();
+      overlay.remove();
     };
   }, []);
 
-  // Route transitions intentionally disabled: public UI should feel instant and never flash an overlay.
+  // Route transitions are handled by a short-lived compositor-only overlay above.
 
   return (
     <>

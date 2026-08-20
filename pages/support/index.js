@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import FancyNav from '../../components/FancyNav';
-import LoginModal from '../../components/LoginModal';
 import FancyFooter from '../../components/FancyFooter';
 import { useTransparentLogo, updateFavicon } from '../../components/LogoImage';
 import toast from 'react-hot-toast';
 import Icon from '../../components/Icon';
+
+const LoginModal = dynamic(() => import('../../components/LoginModal'), { ssr: false });
 
 export async function getServerSideProps() {
   try {

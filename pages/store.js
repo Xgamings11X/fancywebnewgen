@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
@@ -106,8 +106,10 @@ export default function StorePage({ settings, categories: initialCategories, pro
       const nextProducts = Array.isArray(data.products)
         ? enrichProducts([...data.products].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)), nextCategories)
         : [];
-      setCategories(nextCategories);
-      setProducts(nextProducts);
+      startTransition(() => {
+        setCategories(nextCategories);
+        setProducts(nextProducts);
+      });
     } catch (error) {
       if (error?.name !== 'AbortError') toast.error('Katalog gagal diperbarui. Menampilkan data terakhir.');
     } finally {
@@ -117,9 +119,31 @@ export default function StorePage({ settings, categories: initialCategories, pro
 
   useEffect(() => {
     const controller = new AbortController();
-    loadCatalog(controller.signal);
-    return () => controller.abort();
-  }, [loadCatalog]);
+    const hasServerCatalog = (initialProducts?.length || 0) > 0 || (initialCategories?.length || 0) > 0;
+    let idleId = null;
+    let timerId = null;
+
+    const refresh = () => {
+      if (!controller.signal.aborted && document.visibilityState === 'visible') loadCatalog(controller.signal);
+    };
+
+    // SSR already delivered the catalog. Do not fetch + re-render it again during
+    // the route's critical first frames. Refresh later in idle time instead.
+    if (!hasServerCatalog) {
+      refresh();
+    } else {
+      timerId = window.setTimeout(() => {
+        if ('requestIdleCallback' in window) idleId = window.requestIdleCallback(refresh, { timeout: 2500 });
+        else refresh();
+      }, 3500);
+    }
+
+    return () => {
+      controller.abort();
+      if (idleId != null) window.cancelIdleCallback?.(idleId);
+      if (timerId != null) window.clearTimeout(timerId);
+    };
+  }, [initialCategories, initialProducts, loadCatalog]);
 
   useEffect(() => {
     const controller = new AbortController();
