@@ -2288,27 +2288,105 @@ body {
   }
 }
 
-/* ============================================================
-   PageSpeed / Lighthouse: below-the-fold rendering containment
-   Keeps every section and animation intact, but lets Chromium skip
-   layout/paint work for sections that are still far outside viewport.
-   ============================================================ */
-@supports (content-visibility: auto) {
-  .fancy-public-theme .landing-features,
-  .fancy-public-theme .landing-famous-program,
-  .fancy-public-theme .public-footer {
-    content-visibility: auto;
-  }
 
-  .fancy-public-theme .landing-features {
-    contain-intrinsic-size: auto 760px;
-  }
+/* ================================================================
+   FANCY NETWORK V17 — high-FPS glass/glow rendering overrides
+   Visual effects are retained. Heavy effects are narrowed, isolated and
+   composited so scrolling does not constantly repaint large regions.
+   ================================================================ */
+.fancy-public-theme .public-nav {
+  /* Keep real glass, but use a much smaller sampling radius than the old 22px. */
+  background: linear-gradient(180deg, rgba(7,20,15,.90), rgba(3,12,8,.94)) !important;
+  backdrop-filter: blur(8px) saturate(116%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(116%) !important;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
+  contain: paint;
+}
+.fancy-public-theme .public-nav.is-scrolled {
+  background: linear-gradient(180deg, rgba(7,20,15,.95), rgba(3,12,8,.97)) !important;
+  backdrop-filter: blur(5px) saturate(110%) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(110%) !important;
+  border-bottom-color: rgba(174,255,205,.18) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.14) !important;
+}
 
-  .fancy-public-theme .landing-famous-program {
-    contain-intrinsic-size: auto 620px;
-  }
+/* Preserve the glass look on hero controls. The live blur is kept, but narrowed
+   from 12–18px to 4–6px and paired with denser gradients so it looks equally rich. */
+.fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
+.fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span,
+.fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary,
+.fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
+  backdrop-filter: blur(4px) saturate(112%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(112%) !important;
+}
+.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel {
+  background: linear-gradient(145deg, rgba(7,31,21,.93), rgba(3,18,13,.96));
+  backdrop-filter: blur(6px) saturate(116%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(116%) !important;
+  contain: paint;
+  transform: translateZ(0);
+}
+.fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
+  background: linear-gradient(145deg, rgba(5,22,16,.86), rgba(2,14,10,.90));
+  transform: translateZ(0);
+}
+.fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary {
+  background: linear-gradient(145deg, rgba(7,25,18,.78), rgba(3,16,12,.86));
+}
+.fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
+.fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span {
+  background: linear-gradient(145deg, rgba(5,22,15,.72), rgba(2,14,10,.82));
+}
 
-  .fancy-public-theme .public-footer {
-    contain-intrinsic-size: auto 760px;
+/* Keep the warm halo. Reducing the blur radius and isolating the paint gives the
+   same soft edge without a 260px live blur texture being rebuilt unnecessarily. */
+.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel::before {
+  filter: blur(12px) !important;
+  opacity: .82;
+  transform: translateZ(0);
+}
+
+/* Keep the blurred crest and pixel glow, but cache them as isolated compositor
+   layers and use smaller kernels. No visual element is removed. */
+.fancy-public-theme .fn-fancy-backdrop-logo {
+  filter: blur(8px) saturate(130%) contrast(104%);
+  contain: paint;
+  will-change: transform;
+  transform: translate3d(-50%,-50%,0) rotate(-3deg) scale(1.03);
+}
+.fancy-public-theme .fn-fancy-backdrop-logo::after {
+  filter: blur(16px);
+  opacity: .82;
+  transform: translateZ(0);
+}
+.fancy-public-theme .fn-pixel {
+  filter: blur(2px);
+  box-shadow: 0 0 26px currentColor;
+  will-change: transform;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .fancy-public-theme .public-nav {
+    /* Real glass remains on mobile too; the small 3px radius is much cheaper. */
+    background: linear-gradient(180deg, rgba(6,18,13,.955), rgba(3,12,8,.975)) !important;
+    backdrop-filter: blur(3px) saturate(106%) !important;
+    -webkit-backdrop-filter: blur(3px) saturate(106%) !important;
   }
+  .fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
+  .fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span,
+  .fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary,
+  .fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
+    backdrop-filter: blur(2px) saturate(106%) !important;
+    -webkit-backdrop-filter: blur(2px) saturate(106%) !important;
+  }
+  .fancy-public-theme .fn-home-hero-v9 .fn-connect-panel {
+    backdrop-filter: blur(3px) saturate(108%) !important;
+    -webkit-backdrop-filter: blur(3px) saturate(108%) !important;
+  }
+  .fancy-public-theme .fn-fancy-backdrop-logo {
+    filter: blur(7px) saturate(120%) contrast(102%);
+    opacity: .18;
+  }
+  .fancy-public-theme .fn-fancy-backdrop-logo::after { filter: blur(10px); opacity: .66; }
+  .fancy-public-theme .fn-pixel { filter: blur(1px); box-shadow: 0 0 14px currentColor; }
 }

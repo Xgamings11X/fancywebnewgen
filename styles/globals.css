@@ -28,9 +28,9 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
 }
+html { scroll-behavior: smooth; }
 
 :focus:not(:focus-visible) { outline: none; }
 :focus-visible {
@@ -6751,8 +6751,65 @@ html, body, * {
   }
 }
 
-/* PageSpeed: fixed background attachment causes extra mobile painting.
-   The same gradients remain visible; only the attachment mode changes on phones. */
-@media (max-width: 768px) {
-  body { background-attachment: scroll; }
+
+/* ================================================================
+   FANCY NETWORK V17 — smooth interaction + GPU route transition
+   Route animation remains visible, but only a short-lived fixed overlay moves.
+   The several-screen-tall page itself is never promoted into one giant layer.
+   ================================================================ */
+html { scroll-behavior: smooth; }
+body { background-attachment: scroll; }
+
+/* Disable the expensive full-document entrance animation; the same sense of
+   motion is retained by #page-transition-overlay below. */
+#__next > * { animation: none !important; }
+
+#page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(-104%,0,0);
+  background:
+    linear-gradient(110deg, rgba(2,10,7,.97) 0%, rgba(5,24,16,.96) 58%, rgba(42,117,75,.90) 100%);
+  box-shadow: 24px 0 60px rgba(0,0,0,.22);
+  transition: transform .22s cubic-bezier(.22,1,.36,1), opacity .14s ease;
+  contain: strict;
+  will-change: transform, opacity;
+}
+#page-transition-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #9cff72 28%, #5bd5ff 68%, transparent);
+  box-shadow: 0 0 20px rgba(134,245,173,.42);
+}
+#page-transition-overlay.transitioning {
+  opacity: .985;
+  transform: translate3d(0,0,0);
+}
+#page-transition-overlay.finishing {
+  opacity: 0;
+  transform: translate3d(104%,0,0);
+  transition-duration: .20s, .16s;
+}
+
+/* JS updates this once per requestAnimationFrame. */
+#scroll-progress {
+  transition: none !important;
+  contain: layout paint style;
+  will-change: transform;
+}
+#scroll-progress.is-routing { opacity: 1; }
+
+@media (max-width: 900px), (pointer: coarse) {
+  /* Keep smooth anchor scrolling; route transition is compositor-only. */
+  #page-transition-overlay {
+    transition-duration: .18s, .12s;
+    box-shadow: 16px 0 36px rgba(0,0,0,.18);
+  }
 }
