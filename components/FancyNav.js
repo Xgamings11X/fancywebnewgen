@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import LogoImage from './LogoImage';
@@ -23,47 +23,63 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
     ? router.pathname === '/'
     : router.pathname === href || router.pathname.startsWith(`${href}/`);
 
+  const menuOpenRef = useRef(false);
+  const scrollFrameRef = useRef(0);
+  const scrolledRef = useRef(false);
+  menuOpenRef.current = menuOpen;
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
   useEffect(() => {
-    let scrollFrame = 0;
+    const commitScrollState = () => {
+      scrollFrameRef.current = 0;
+      const next = window.scrollY > 18;
+      if (next === scrolledRef.current) return;
+      scrolledRef.current = next;
+      setScrolled(next);
+    };
     const handleScroll = () => {
-      if (scrollFrame) return;
-      scrollFrame = window.requestAnimationFrame(() => {
-        scrollFrame = 0;
-        setScrolled(window.scrollY > 18);
-      });
+      if (!scrollFrameRef.current) scrollFrameRef.current = window.requestAnimationFrame(commitScrollState);
     };
-
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
-    };
-  }, []);
-
-  useEffect(() => {
-    const closeMenu = () => setMenuOpen(false);
-    router.events.on('routeChangeStart', closeMenu);
-    return () => router.events.off('routeChangeStart', closeMenu);
-  }, [router.events]);
-
-  useEffect(() => {
-    if (!menuOpen) return undefined;
-    const closeMenu = () => setMenuOpen(false);
     const handleKeyDown = event => {
-      if (event.key === 'Escape') closeMenu();
+      if (event.key === 'Escape' && menuOpenRef.current) closeMenu();
     };
     const handlePointerDown = event => {
-      if (navRef.current && !navRef.current.contains(event.target)) closeMenu();
+      if (menuOpenRef.current && navRef.current && !navRef.current.contains(event.target)) closeMenu();
     };
 
+    commitScrollState();
+    router.events.on('routeChangeStart', closeMenu);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('pointerdown', handlePointerDown, { passive: true });
+
+    // Next/Link already prefetches visible links in production. This idle pass also
+    // warms the other main public route, so Home ↔ Store ↔ Support needs less work
+    // exactly at click time. Skip it for data-saver / very slow connections.
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const canPrefetch = !connection?.saveData && !/2g/.test(connection?.effectiveType || '');
+    let idleId = null;
+    let timerId = null;
+    const prefetchPublicRoutes = () => {
+      if (!canPrefetch) return;
+      for (const href of ['/', '/store', '/support']) {
+        if (href !== router.pathname) router.prefetch(href).catch(() => {});
+      }
+    };
+    if ('requestIdleCallback' in window) idleId = window.requestIdleCallback(prefetchPublicRoutes, { timeout: 1800 });
+    else timerId = window.setTimeout(prefetchPublicRoutes, 700);
+
     return () => {
+      router.events.off('routeChangeStart', closeMenu);
+      window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('pointerdown', handlePointerDown);
+      if (scrollFrameRef.current) window.cancelAnimationFrame(scrollFrameRef.current);
+      if (idleId != null) window.cancelIdleCallback?.(idleId);
+      if (timerId != null) window.clearTimeout(timerId);
     };
-  }, [menuOpen]);
+  }, [closeMenu, router]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -74,9 +90,9 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
 
   return (
     <nav ref={navRef} className={`public-nav${scrolled ? ' is-scrolled' : ''}`} aria-label="Navigasi utama">
-      <Link href="/" className="public-nav-brand" aria-label={`${serverName} — Beranda`}>
+      <Link href="/" prefetch className="public-nav-brand" aria-label={`${serverName} — Beranda`}>
         <span className="public-nav-logo">
-          {logoUrl ? <img src={logoUrl} alt="" width={64} height={64} decoding="async" fetchPriority="high" /> : <LogoImage alt="" fetchPriority="high" />}
+          {logoUrl ? <img src={logoUrl} alt="" width={64} height={64} decoding="async" fetchPriority="high" /> : <LogoImage alt="" width={64} height={64} fetchPriority="high" />}
         </span>
         <span className="public-nav-brand-copy">
           <strong>{serverName}</strong>
@@ -89,6 +105,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
           <li key={link.href}>
             <Link
               href={link.href}
+              prefetch
               aria-current={isActive(link.href) ? 'page' : undefined}
               className={`public-nav-link${isActive(link.href) ? ' active' : ''}`}
             >
@@ -139,6 +156,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch
                 onClick={() => setMenuOpen(false)}
                 className={`public-mobile-link${isActive(link.href) ? ' active' : ''}`}
               >
