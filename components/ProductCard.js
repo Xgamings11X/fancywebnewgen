@@ -35,12 +35,14 @@ function resolvePresentation(product) {
 
 
 const BADGE_COLOR_MAP = {
-  orange: { rgb: '255, 156, 70', text: '#ffb36b' },
+  // Legacy admin data may still say "orange". On public cards it now resolves
+  // to the emerald brand accent so an old value cannot leak the previous theme.
+  orange: { rgb: '134, 245, 173', text: '#b9ffd0' },
   red:    { rgb: '255, 91, 111', text: '#ff8799' },
   purple: { rgb: '177, 115, 255', text: '#c99cff' },
   blue:   { rgb: '79, 173, 255', text: '#8acaff' },
   green:  { rgb: '126, 242, 160', text: '#a8ffbd' },
-  yellow: { rgb: '255, 215, 86', text: '#ffe47e' },
+  yellow: { rgb: '217, 255, 113', text: '#e8ffad' },
 };
 
 function resolveBadgeColor(value) {

@@ -188,7 +188,7 @@ export default function LoginModal({ onClose, onSuccess, product }) {
                   className={`login-platform-card${platform === 'java' ? ' active' : ''}`}
                   onClick={() => changePlatform('java')}
                 >
-                  <span><Icon name="mug" size={20} /></span>
+                  <span><Icon name="computer" size={20} /></span>
                   <div><strong>Java Edition</strong><small>Username tanpa titik</small></div>
                   <Icon name="circle-check" size={16} className="login-platform-check" />
                 </button>
@@ -201,7 +201,7 @@ export default function LoginModal({ onClose, onSuccess, product }) {
                   onClick={() => changePlatform('bedrock')}
                 >
                   <span><Icon name="mobile" size={20} /></span>
-                  <div><strong>Bedrock Edition</strong><small>Prefix titik otomatis</small></div>
+                  <div><strong>Bedrock Edition</strong><small>Username dengan prefix titik otomatis</small></div>
                   <Icon name="circle-check" size={16} className="login-platform-check" />
                 </button>
               </div>
@@ -214,9 +214,9 @@ export default function LoginModal({ onClose, onSuccess, product }) {
               )}
 
               <form onSubmit={handleSubmit} className="login-form">
-                <label htmlFor="minecraft-username">{isBedrock ? 'Nickname Bedrock' : 'Username Java'}</label>
+                <label htmlFor="minecraft-username">{isBedrock ? 'Username Bedrock' : 'Username Java'}</label>
                 <div className="login-input-shell">
-                  <Icon name={isBedrock ? 'mobile' : 'mug'} size={18} />
+                  <Icon name={isBedrock ? 'mobile' : 'computer'} size={18} />
                   {isBedrock && <span className="login-input-prefix">.</span>}
                   <input
                     ref={usernameRef}
@@ -224,7 +224,7 @@ export default function LoginModal({ onClose, onSuccess, product }) {
                     type="text"
                     value={username}
                     onChange={event => setUsername(event.target.value.replace(/^\.+/, ''))}
-                    placeholder={isBedrock ? 'NicknameBedrock' : 'UsernameJava'}
+                    placeholder={isBedrock ? 'Username Bedrock' : 'Username Java'}
                     maxLength={20}
                     autoComplete="username"
                     disabled={loading}

@@ -11,10 +11,10 @@ import Icon from '../components/Icon';
 const LoginModal = dynamic(() => import('../components/LoginModal'), { ssr: false });
 
 const FEATURES = [
-  { id:'anticheat', icon:'shield-halved', tone:'orange', title:'Proteksi Anti-Cheat', desc:'Proteksi berlapis dan moderasi aktif menjaga permainan tetap adil tanpa mengganggu pemain normal.' },
+  { id:'anticheat', icon:'shield-halved', tone:'green', title:'Proteksi Anti-Cheat', desc:'Proteksi berlapis dan moderasi aktif menjaga permainan tetap adil tanpa mengganggu pemain normal.' },
   { id:'community', icon:'users', tone:'blue', title:'Komunitas Aktif', desc:'Temukan teman baru, party, guild, dan bantuan cepat dari komunitas Indonesia yang ramah.' },
   { id:'latency', icon:'bolt', tone:'green', title:'Performa Stabil', desc:'Konfigurasi server dan jaringan dioptimalkan untuk TPS stabil serta latensi yang nyaman.' },
-  { id:'reward', icon:'trophy', tone:'purple', title:'Event & Reward', desc:'Daily reward, event komunitas, dan hadiah rutin membuat progres bermain selalu terasa menarik.' },
+  { id:'reward', icon:'trophy', tone:'blue', title:'Event & Reward', desc:'Daily reward, event komunitas, dan hadiah rutin membuat progres bermain selalu terasa menarik.' },
 ];
 
 const SAFE_PROTOCOLS = new Set(['http:', 'https:']);

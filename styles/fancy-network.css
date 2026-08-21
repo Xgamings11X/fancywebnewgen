@@ -2390,3 +2390,135 @@ body {
   .fancy-public-theme .fn-fancy-backdrop-logo::after { filter: blur(10px); opacity: .66; }
   .fancy-public-theme .fn-pixel { filter: blur(1px); box-shadow: 0 0 14px currentColor; }
 }
+
+/* ================================================================
+   FANCY NETWORK V18 — unified public palette + low-paint glass
+   Static translucent gradients keep the depth of the design without
+   continuously re-sampling the page behind every glass surface on scroll.
+   ================================================================ */
+.fancy-public-theme {
+  /* Warm yellow/orange legacy accents now resolve to the brand lime. */
+  --fn-gold: var(--fn-lime);
+}
+
+html:has(.fancy-public-theme) {
+  scrollbar-color: #86f5ad #06100d;
+}
+
+.fancy-public-theme .public-nav,
+.fancy-public-theme .fn-home-hero-v9 .fn-status-rail,
+.fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
+.fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span,
+.fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary,
+.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel,
+.fancy-public-theme .fn-home-hero-v9 .fn-dock-item,
+.fancy-public-theme .support-flow-card,
+.fn-modal-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.fancy-public-theme .public-nav {
+  background: linear-gradient(180deg, rgba(7,20,15,.975), rgba(3,12,8,.985)) !important;
+  /* Paint containment clipped the fixed mobile dropdown to the nav's height. */
+  contain: none;
+}
+.fancy-public-theme .public-nav.is-scrolled {
+  background: linear-gradient(180deg, rgba(7,20,15,.99), rgba(3,12,8,.995)) !important;
+}
+.fancy-public-theme .public-mobile-login-button {
+  color: #07140f !important;
+  background-color: var(--fn-green) !important;
+  background-image: linear-gradient(135deg, var(--fn-lime), var(--fn-green)) !important;
+}
+.fn-modal-overlay .login-input-shell input:focus,
+.fn-modal-overlay .login-input-shell input:focus-visible {
+  outline: none !important;
+}
+.fn-modal-overlay .login-input-shell > svg,
+.fn-modal-overlay .login-input-prefix {
+  color: #86f5ad !important;
+}
+.fn-modal-overlay .login-platform-check {
+  color: #86f5ad !important;
+}
+.fn-modal-overlay .login-platform-card.active .login-platform-check {
+  color: #07120e !important;
+}
+.fn-modal-overlay button:focus-visible {
+  outline-color: #d9ff71 !important;
+}
+#page-transition-overlay {
+  background-color: #06100d !important;
+  background-image: linear-gradient(110deg, rgba(2,10,7,.97) 0%, rgba(5,24,16,.96) 58%, rgba(42,117,75,.90) 100%) !important;
+}
+.fancy-public-theme .fn-home-hero-v9 .fn-status-rail,
+.fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
+.fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span,
+.fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary,
+.fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
+  background: linear-gradient(145deg, rgba(7,27,19,.94), rgba(2,13,9,.97)) !important;
+}
+.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel {
+  background: linear-gradient(145deg, rgba(8,38,25,.975), rgba(2,15,10,.99)) !important;
+}
+.fancy-public-theme .support-flow-card {
+  background: linear-gradient(145deg, rgba(11,34,23,.97), rgba(4,18,12,.985)) !important;
+}
+.fn-modal-overlay {
+  background:
+    radial-gradient(circle at 18% 14%, rgba(134,245,173,.07), transparent 31%),
+    radial-gradient(circle at 83% 82%, rgba(91,213,255,.055), transparent 30%),
+    rgba(2,8,6,.95) !important;
+}
+
+.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel::before {
+  background: radial-gradient(circle, rgba(134,245,173,.34), rgba(101,213,255,.09) 44%, transparent 70%);
+  filter: none !important;
+}
+.fancy-public-theme .fn-fancy-backdrop-logo {
+  opacity: .12;
+  filter: saturate(118%) contrast(104%) !important;
+  will-change: auto;
+}
+.fancy-public-theme .fn-fancy-backdrop-logo::after {
+  background: radial-gradient(circle, rgba(134,245,173,.16), rgba(101,213,255,.055) 44%, transparent 72%);
+  filter: none !important;
+  opacity: .72;
+}
+.fancy-public-theme .fn-pixel {
+  filter: none !important;
+  opacity: .13;
+  box-shadow: 0 0 26px currentColor;
+  will-change: auto;
+}
+.fancy-public-theme .fn-pixel-d {
+  color: var(--fn-lime);
+  background: var(--fn-lime);
+}
+.fancy-public-theme .fn-pixel-f {
+  color: var(--fn-blue);
+  background: var(--fn-blue);
+}
+.fancy-public-theme .landing-feature-card:nth-child(4) .landing-feature-icon {
+  background: var(--fn-blue) !important;
+}
+
+/* Skip layout/paint work for substantial sections until they approach the
+   viewport, while reserving space so the scrollbar does not jump. */
+.fancy-public-theme .landing-features,
+.fancy-public-theme .landing-famous-program,
+.fancy-public-theme .store-catalog-section,
+.fancy-public-theme .support-workspace,
+.fancy-public-theme .public-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+.fancy-public-theme .store-product-card {
+  contain: layout paint style;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .fancy-public-theme .fn-fancy-backdrop-logo { opacity: .08; filter: saturate(112%) !important; }
+  .fancy-public-theme .fn-pixel { opacity: .09; box-shadow: 0 0 16px currentColor; }
+}

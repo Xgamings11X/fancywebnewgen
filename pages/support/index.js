@@ -22,7 +22,7 @@ export async function getServerSideProps() {
 const TYPES = [
   { id: 'banding', icon: 'gavel', label: 'Aju Banding', desc: 'Ajukan peninjauan ulang hukuman atau keputusan staf.', accent: '#9ff7b5' },
   { id: 'bug', icon: 'bug', label: 'Report Bug', desc: 'Laporkan masalah teknis, error, duplikasi, atau exploit.', accent: '#64d8ff' },
-  { id: 'report_player', icon: 'user-xmark', label: 'Report Pemain', desc: 'Laporkan pemain yang melanggar aturan server.', accent: '#ffd76a' },
+  { id: 'report_player', icon: 'user-xmark', label: 'Report Pemain', desc: 'Laporkan pemain yang melanggar aturan server.', accent: '#d9ff71' },
   { id: 'lainnya', icon: 'comment-dots', label: 'Pertanyaan Lain', desc: 'Bantuan transaksi, akun, saran, atau pertanyaan umum.', accent: '#7ee7c2' },
 ];
 
