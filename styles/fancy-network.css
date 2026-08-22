@@ -3394,8 +3394,8 @@ html:has(.fancy-public-theme) {
 /* ================================================================
    V26 — final shared canvas + mobile critical-render budget
    Route wrappers stay transparent so the world grid never becomes a
-   different-coloured rectangle. Off-screen sections are skipped until near
-   the viewport and coarse-pointer controls keep a reliable touch target.
+   different-coloured rectangle. Catalog-heavy routes keep off-screen paint
+   containment, while Home stays pre-rendered for uninterrupted fast scroll.
    ================================================================ */
 .public-shell.fancy-public-theme {
   background-color: #06150f !important;
@@ -3438,18 +3438,14 @@ html:has(.fancy-public-theme) {
     background-size: 1080px auto;
   }
 
-  .home-page .landing-features,
-  .home-page .landing-famous-program,
   .store-page .store-catalog-section,
   .leaderboard-page .leaderboard-wrap,
-  .fancy-public-theme .public-footer {
+  .fancy-public-theme:not(.home-page) .public-footer {
     content-visibility: auto;
   }
-  .home-page .landing-features { contain-intrinsic-size: auto 760px; }
-  .home-page .landing-famous-program { contain-intrinsic-size: auto 620px; }
   .store-page .store-catalog-section { contain-intrinsic-size: auto 1000px; }
   .leaderboard-page .leaderboard-wrap { contain-intrinsic-size: auto 1040px; }
-  .fancy-public-theme .public-footer { contain-intrinsic-size: auto 520px; }
+  .fancy-public-theme:not(.home-page) .public-footer { contain-intrinsic-size: auto 520px; }
 
   .leaderboard-podium-card > img { filter: none; }
   .fancy-public-theme .public-nav-login,
@@ -3513,13 +3509,6 @@ html:has(.fancy-public-theme) {
   }
   .home-page .landing-social-hub-card { min-width: 0; min-height: 52px; padding-inline: 10px; }
   .home-page .landing-social-hub-card strong { font-size: 11px; }
-}
-
-@media (max-width: 720px) {
-  .home-page .landing-social-hub {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 220px;
-  }
 }
 
 /* V29 — reference-inspired story and feedback sections. Static layout,
@@ -3589,7 +3578,6 @@ html:has(.fancy-public-theme) {
   width: max-content;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   backface-visibility: hidden;
   will-change: transform;
   animation: fn-feedback-ticker-scroll var(--feedback-ticker-duration, 24s) linear infinite;
@@ -3597,6 +3585,14 @@ html:has(.fancy-public-theme) {
 @keyframes fn-feedback-ticker-scroll {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-50%, 0, 0); }
+}
+.home-page .landing-feedback-ticker-group {
+  width: max-content;
+  min-width: 100vw;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
 }
 .home-page .landing-feedback-ticker-item {
   flex: 0 0 auto;
@@ -3704,15 +3700,6 @@ html:has(.fancy-public-theme) {
   .home-page .landing-feedback-heading { padding: 46px 12px; border-radius: 18px; }
   .home-page .landing-feedback-options { justify-content: space-between; gap: 5px; }
   .home-page .landing-feedback-options button { width: 44px; height: 44px; border-radius: 12px; }
-}
-
-@media (max-width: 720px) {
-  .home-page .landing-world-story,
-  .home-page .landing-feedback {
-    content-visibility: auto;
-  }
-  .home-page .landing-world-story { contain-intrinsic-size: auto 1050px; }
-  .home-page .landing-feedback { contain-intrinsic-size: auto 470px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

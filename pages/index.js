@@ -569,17 +569,24 @@ export default function HomePage({ settings }) {
               className="landing-feedback-ticker-track"
               style={{ '--feedback-ticker-duration':`${Math.max(20, tickerFeedbackItems.length * 3.2)}s` }}
             >
-              {[...tickerFeedbackItems, ...tickerFeedbackItems].map((item, index) => (
-                <article
-                  key={`${item.id}-${index}`}
-                  className={`landing-feedback-ticker-item${item.placeholder ? ' is-placeholder' : ''}`}
-                  aria-hidden={index >= tickerFeedbackItems.length ? 'true' : undefined}
+              {[0, 1].map(groupIndex => (
+                <div
+                  key={groupIndex}
+                  className="landing-feedback-ticker-group"
+                  aria-hidden={groupIndex === 1 ? 'true' : undefined}
                 >
-                  <PlayerAvatar uuid={item.uuid} username={item.avatarUsername} size={34}/>
-                  <strong>{item.username}</strong>
-                  <span>{item.text || `${item.rating}/5`}</span>
-                  <i aria-hidden="true"/>
-                </article>
+                  {tickerFeedbackItems.map((item, itemIndex) => (
+                    <article
+                      key={`${item.id}-${itemIndex}`}
+                      className={`landing-feedback-ticker-item${item.placeholder ? ' is-placeholder' : ''}`}
+                    >
+                      <PlayerAvatar uuid={item.uuid} username={item.avatarUsername} size={34}/>
+                      <strong>{item.username}</strong>
+                      <span>{item.text || `${item.rating}/5`}</span>
+                      <i aria-hidden="true"/>
+                    </article>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
