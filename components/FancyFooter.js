@@ -64,12 +64,15 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
             <Link href="/leaderboard">Leaderboard</Link>
             {safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL) && <a href={safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL)} target="_blank" rel="noopener noreferrer">Vote MinecraftMP</a>}
           </div>
-          <div className="public-footer-column">
-            <strong>Bantuan</strong>
-            {resolvedDiscord && <a href={resolvedDiscord} target="_blank" rel="noopener noreferrer">Discord community</a>}
-            {resolvedWhatsApp && <a href={resolvedWhatsApp} target="_blank" rel="noopener noreferrer">WhatsApp admin</a>}
-            <span>Bantuan dipusatkan melalui Discord dan WhatsApp.</span>
-          </div>
+          {(resolvedDiscord || resolvedWhatsApp) && (
+            <div className="public-footer-column">
+              <strong>Bantuan</strong>
+              <div className="public-footer-help-actions">
+                {resolvedDiscord && <a href={resolvedDiscord} target="_blank" rel="noopener noreferrer"><Icon name="discord" size={15}/> Buka Discord</a>}
+                {resolvedWhatsApp && <a href={resolvedWhatsApp} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" size={15}/> Buka WhatsApp</a>}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

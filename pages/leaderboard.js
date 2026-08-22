@@ -85,12 +85,11 @@ export async function getServerSideProps() {
 export default function LeaderboardPage({ settings = {} }) {
   const [player, setPlayer] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
+  const [activeBoard, setActiveBoard] = useState('voter');
   const [data, setData] = useState({ voters: [], donors: [], voterConfigured: true, voterError: '', updatedAt: '' });
   const [loading, setLoading] = useState(true);
   const serverName = settings.server_name || 'Fancy Network';
   const voteUrl = safeUrl(settings.vote_url || process.env.NEXT_PUBLIC_VOTE_URL);
-  const discordUrl = safeUrl(settings.discord_url || process.env.NEXT_PUBLIC_DISCORD_URL);
-  const whatsappUrl = safeUrl(settings.whatsapp_url || process.env.NEXT_PUBLIC_WHATSAPP_URL);
 
   useEffect(() => {
     try { setPlayer(JSON.parse(localStorage.getItem('mc_player') || 'null')); } catch {}
@@ -107,6 +106,25 @@ export default function LeaderboardPage({ settings = {} }) {
 
   useEffect(() => { load(); }, [load]);
   const updatedLabel = useMemo(() => data.updatedAt ? new Date(data.updatedAt).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' }) : '-', [data.updatedAt]);
+  const boards = useMemo(() => ({
+    voter: {
+      eyebrow: 'MINECRAFTMP',
+      title: 'Top Voter',
+      icon: 'star',
+      description: 'Player dengan vote MinecraftMP terbanyak.',
+      entries: data.voters || [],
+      emptyText: data.voterConfigured ? (data.voterError || 'Belum ada vote pada periode ini.') : 'Isi LEADERBOARD_ENDPOINT untuk menampilkan data voter.',
+    },
+    donor: {
+      eyebrow: 'TRANSAKSI PRODUK',
+      title: 'Top Donatur',
+      icon: 'cart-shopping',
+      description: 'Player dengan total pembelian produk tertinggi.',
+      entries: data.donors || [],
+      emptyText: 'Belum ada transaksi produk yang berhasil.',
+    },
+  }), [data]);
+  const selectedBoard = boards[activeBoard];
 
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method:'POST', credentials:'include' }).catch(() => {});
@@ -132,7 +150,7 @@ export default function LeaderboardPage({ settings = {} }) {
             <div className="leaderboard-hero-copy">
               <span className="public-eyebrow">COMMUNITY RANKING</span>
               <h1 className="font-space">Pemain terbaik,<br/><strong>dukungan nyata.</strong></h1>
-              <p>Satu halaman untuk melihat voter MinecraftMP paling aktif dan player dengan total pembelian produk tertinggi.</p>
+              <p>Pilih kategori untuk melihat voter MinecraftMP paling aktif atau player dengan total pembelian produk tertinggi.</p>
               <div className="leaderboard-actions">
                 {voteUrl && <a href={voteUrl} target="_blank" rel="noopener noreferrer" className="leaderboard-primary-action"><Icon name="star" size={16}/> VOTE DI MINECRAFTMP</a>}
                 <button type="button" onClick={load} disabled={loading}><Icon name="rotate" size={15} spin={loading}/> {loading ? 'MEMUAT' : 'PERBARUI'}</button>
@@ -146,18 +164,38 @@ export default function LeaderboardPage({ settings = {} }) {
           </header>
 
           <div className="leaderboard-wrap">
-            <div className="leaderboard-grid">
-              <RankingBoard type="voter" eyebrow="MINECRAFTMP" title="Top Voter" entries={data.voters || []} emptyText={data.voterConfigured ? (data.voterError || 'Belum ada vote pada periode ini.') : 'Isi LEADERBOARD_ENDPOINT untuk menampilkan data voter.'}/>
-              <RankingBoard type="donor" eyebrow="TRANSAKSI PRODUK" title="Top Donatur" entries={data.donors || []} emptyText="Belum ada transaksi produk yang berhasil."/>
+            <div className="leaderboard-category-tabs" role="tablist" aria-label="Kategori leaderboard">
+              {Object.entries(boards).map(([key, board]) => {
+                const active = activeBoard === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    aria-controls="leaderboard-selected-board"
+                    className={active ? 'active' : ''}
+                    onClick={() => setActiveBoard(key)}
+                  >
+                    <span><Icon name={board.icon} size={19}/></span>
+                    <div><strong>{board.title}</strong><small>{board.description}</small></div>
+                    <b>{board.entries.length}</b>
+                  </button>
+                );
+              })}
             </div>
 
-            <section className="leaderboard-contact">
-              <div><span className="public-eyebrow">BUTUH BANTUAN?</span><h2>Hubungi tim lewat Discord atau WhatsApp.</h2><p>Ticket website sudah tidak digunakan agar semua bantuan terpusat dan lebih cepat ditangani.</p></div>
-              <div>
-                {discordUrl && <a href={discordUrl} target="_blank" rel="noopener noreferrer"><Icon name="discord" size={17}/> Discord</a>}
-                {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" size={17}/> WhatsApp</a>}
+            <div className="leaderboard-grid">
+              <div id="leaderboard-selected-board" role="tabpanel" aria-label={selectedBoard.title}>
+                <RankingBoard
+                  type={activeBoard}
+                  eyebrow={selectedBoard.eyebrow}
+                  title={selectedBoard.title}
+                  entries={selectedBoard.entries}
+                  emptyText={selectedBoard.emptyText}
+                />
               </div>
-            </section>
+            </div>
           </div>
         </main>
         <FancyFooter serverName={serverName} settings={settings}/>
