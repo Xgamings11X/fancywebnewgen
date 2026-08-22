@@ -28,7 +28,8 @@ function cleanText(value) {
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    const items = (await FeedbackAsync.recent(10))
+    const items = (await FeedbackAsync.all())
+      .slice(0, 10)
       .filter(item => item.text)
       .map(publicFeedback);
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');

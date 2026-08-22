@@ -38,7 +38,7 @@ const FEEDBACK_PLACEHOLDERS = Array.from({ length:5 }, (_, index) => ({
   id:`feedback-placeholder-${index + 1}`,
   username:'Steve',
   avatarUsername:'Steve',
-  uuid:null,
+  uuid:'c06f89064c8a49119c29ea1dbd1aab82',
   rating:0,
   text:'Menunggu feedback',
   placeholder:true,
@@ -227,10 +227,11 @@ export default function HomePage({ settings }) {
     if (itemCount < 2) return undefined;
     const rotate = () => {
       if (document.visibilityState === 'visible') {
-        setFeedbackIndex(current => (current + 1) % itemCount);
+        const step = itemCount > FEEDBACK_PLACEHOLDERS.length ? FEEDBACK_PLACEHOLDERS.length : 1;
+        setFeedbackIndex(current => current + step >= itemCount ? 0 : current + step);
       }
     };
-    const interval = window.setInterval(rotate, 10_000);
+    const interval = window.setInterval(rotate, 12_000);
     return () => window.clearInterval(interval);
   }, [feedbackItems.length]);
 
@@ -582,8 +583,12 @@ export default function HomePage({ settings }) {
         <section className="landing-section landing-feedback" aria-labelledby="feedback-title">
           <div className="landing-feedback-ticker" aria-label="Feedback pemain terbaru" aria-live="polite">
             <div key={feedbackIndex} className="landing-feedback-ticker-track">
-              {visibleFeedbackItems.map(item => (
-                <article key={item.id} className={`landing-feedback-ticker-item${item.placeholder ? ' is-placeholder' : ''}`}>
+              {[...visibleFeedbackItems, ...visibleFeedbackItems].map((item, index) => (
+                <article
+                  key={`${item.id}-${index}`}
+                  className={`landing-feedback-ticker-item${item.placeholder ? ' is-placeholder' : ''}`}
+                  aria-hidden={index >= visibleFeedbackItems.length ? 'true' : undefined}
+                >
                   <PlayerAvatar uuid={item.uuid} username={item.avatarUsername} size={34}/>
                   <strong>{item.username}</strong>
                   <span>{item.text || `${item.rating}/5`}</span>
