@@ -155,25 +155,23 @@ export default function StorePage({ settings, categories: initialCategories, pro
 
     let token = '';
     try { token = localStorage.getItem('mc_token') || ''; } catch {}
-    if (token) {
-      fetch('/api/auth/me', {
-        credentials: 'include',
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal,
+    fetch('/api/auth/me', {
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      signal: controller.signal,
+    })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (data?.success && data.player) {
+          setPlayer(data.player);
+          localStorage.setItem('mc_player', JSON.stringify(data.player));
+        } else {
+          setPlayer(null);
+          localStorage.removeItem('mc_player');
+          localStorage.removeItem('mc_token');
+        }
       })
-        .then(response => response.ok ? response.json() : null)
-        .then(data => {
-          if (data?.success && data.player) {
-            setPlayer(data.player);
-            localStorage.setItem('mc_player', JSON.stringify(data.player));
-          } else {
-            setPlayer(null);
-            localStorage.removeItem('mc_player');
-            localStorage.removeItem('mc_token');
-          }
-        })
-        .catch(() => {});
-    }
+      .catch(() => {});
 
     return () => controller.abort();
   }, []);

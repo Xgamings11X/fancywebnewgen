@@ -18,15 +18,15 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
   const javaIp = s.server_ip || 'play.fancynet.my.id';
   const bedrockIp = s.bedrock_ip || javaIp;
   const bedrockPort = String(s.bedrock_port || '19026');
-  const resolvedDiscord = safeUrl(s.discord_url || discordUrl || process.env.NEXT_PUBLIC_DISCORD_URL);
-  const resolvedWhatsApp = safeUrl(s.whatsapp_url || process.env.NEXT_PUBLIC_WHATSAPP_URL);
+  const resolvedDiscord = safeUrl(s.discord_url || discordUrl || process.env.NEXT_PUBLIC_DISCORD_URL || 'https://discord.com/');
+  const resolvedWhatsApp = safeUrl(s.whatsapp_url || process.env.NEXT_PUBLIC_WHATSAPP_URL || 'https://www.whatsapp.com/');
 
   const socials = [
     { href: resolvedDiscord, label: 'Discord', icon: 'discord' },
     { href: resolvedWhatsApp, label: 'WhatsApp', icon: 'whatsapp' },
-    { href: safeUrl(s.instagram_url || process.env.NEXT_PUBLIC_INSTAGRAM_URL), label: 'Instagram', icon: 'instagram' },
-    { href: safeUrl(s.tiktok_url || process.env.NEXT_PUBLIC_TIKTOK_URL), label: 'TikTok', icon: 'tiktok' },
-    { href: safeUrl(s.youtube_url || process.env.NEXT_PUBLIC_YOUTUBE_URL), label: 'YouTube', icon: 'youtube' },
+    { href: safeUrl(s.instagram_url || process.env.NEXT_PUBLIC_INSTAGRAM_URL || 'https://www.instagram.com/'), label: 'Instagram', icon: 'instagram' },
+    { href: safeUrl(s.tiktok_url || process.env.NEXT_PUBLIC_TIKTOK_URL || 'https://www.tiktok.com/'), label: 'TikTok', icon: 'tiktok' },
+    { href: safeUrl(s.youtube_url || process.env.NEXT_PUBLIC_YOUTUBE_URL || 'https://www.youtube.com/'), label: 'YouTube', icon: 'youtube' },
   ].filter(item => item.href);
 
   return (
@@ -62,7 +62,7 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
             <Link href="/">Home</Link>
             <Link href="/store">Store</Link>
             <Link href="/leaderboard">Leaderboard</Link>
-            {safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL) && <a href={safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL)} target="_blank" rel="noopener noreferrer">Vote MinecraftMP</a>}
+            <a href={safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL || 'https://minecraft-mp.com/')} target="_blank" rel="noopener noreferrer">Vote MinecraftMP</a>
           </div>
           {(resolvedDiscord || resolvedWhatsApp) && (
             <div className="public-footer-column">

@@ -3464,6 +3464,257 @@ html:has(.fancy-public-theme) {
   }
 }
 
+/* V28 — compact social strip based on the supplied reference. No blur,
+   external media, entrance animation, or continuous GPU work. */
+.home-page .landing-social-hub { padding: clamp(44px, 5vw, 68px) 0 16px; }
+.home-page .landing-social-hub-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.home-page .landing-social-hub-card {
+  min-width: 132px;
+  min-height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background-color .16s ease, color .16s ease;
+}
+.home-page a.landing-social-hub-card:hover {
+  background: currentColor;
+}
+.home-page .landing-social-hub-card strong {
+  color: inherit;
+  font-size: 14px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.home-page .landing-social-hub-card:hover > * { color: #07110d; }
+.home-page .landing-social-hub-card.is-vote { color: #ffd449; background: rgba(255, 193, 33, .10); }
+.home-page .landing-social-hub-card.is-discord { color: #9aa7ff; background: rgba(92, 105, 220, .14); }
+.home-page .landing-social-hub-card.is-whatsapp { color: #42e984; background: rgba(38, 194, 101, .11); }
+.home-page .landing-social-hub-card.is-tiktok { color: #9ba3b7; background: rgba(139, 147, 166, .08); }
+.home-page .landing-social-hub-card.is-instagram { color: #ff4f91; background: rgba(215, 45, 111, .10); }
+.home-page .landing-social-hub-card.is-youtube { color: #ff6b6b; background: rgba(220, 50, 50, .10); }
+
+@media (max-width: 560px) {
+  .home-page .landing-social-hub { padding-top: 42px; }
+  .home-page .landing-social-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .home-page .landing-social-hub-card { min-width: 0; min-height: 52px; padding-inline: 10px; }
+  .home-page .landing-social-hub-card strong { font-size: 11px; }
+}
+
+@media (max-width: 720px) {
+  .home-page .landing-social-hub {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 220px;
+  }
+}
+
+/* V29 — reference-inspired story and feedback sections. Static layout,
+   no blur layers and no always-running animations. */
+.home-page .landing-world-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: clamp(34px, 6vw, 86px);
+  padding: clamp(66px, 8vw, 110px) 0;
+}
+.home-page .landing-world-story article { min-width: 0; }
+.home-page .landing-world-story h2 {
+  margin: 11px 0 24px;
+  color: #f3fff7;
+  font-size: clamp(39px, 5vw, 66px);
+  line-height: .98;
+}
+.home-page .landing-world-story h2 strong { color: #86f5ad; }
+.home-page .landing-world-story p {
+  margin: 0;
+  color: #8ba296;
+  font-size: clamp(12px, 1.05vw, 15px);
+  line-height: 1.9;
+}
+.home-page .landing-world-story-about {
+  padding: clamp(24px, 3vw, 38px);
+  border: 1px solid rgba(134, 245, 173, .11);
+  border-radius: 20px;
+  background: rgba(3, 17, 12, .66);
+}
+.home-page .landing-world-story-about p + p { margin-top: 22px; }
+.home-page .landing-gameplay-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 30px;
+}
+.home-page .landing-gameplay-tags span {
+  min-width: 92px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border: 1px solid rgba(134, 245, 173, .18);
+  border-radius: 999px;
+  color: #07140e;
+  background: #86f5ad;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.home-page .landing-gameplay-tags .tone-lime { background: #d9ff71; }
+
+.home-page .landing-feedback {
+  margin-top: clamp(70px, 9vw, 130px);
+  margin-bottom: clamp(70px, 8vw, 110px);
+}
+.home-page .landing-feedback-ticker {
+  overflow: hidden;
+  margin-bottom: 18px;
+  border-block: 1px solid rgba(134, 245, 173, .1);
+  background: rgba(3, 17, 12, .68);
+}
+.home-page .landing-feedback-ticker-track {
+  width: max-content;
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fn-feedback-ticker-swap .34s ease-out both;
+}
+@keyframes fn-feedback-ticker-swap {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.home-page .landing-feedback-ticker-item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 60px;
+  padding: 9px 18px;
+}
+.home-page .landing-feedback-ticker-item .fn-player-avatar {
+  flex: 0 0 auto;
+  border: 1px solid rgba(134, 245, 173, .18);
+  border-radius: 9px;
+  background: #071f15;
+  image-rendering: pixelated;
+}
+.home-page .landing-feedback-ticker-item strong {
+  max-width: 150px;
+  overflow: hidden;
+  color: #effff4;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-page .landing-feedback-ticker-item span {
+  color: #86f5ad;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.home-page .landing-feedback-ticker-item i {
+  width: 5px;
+  height: 5px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: rgba(134, 245, 173, .18);
+}
+.home-page .landing-feedback-ticker-item.is-placeholder { opacity: .56; }
+.home-page .landing-feedback-ticker-item.is-placeholder span { color: #82998d; }
+.home-page .landing-feedback-heading {
+  padding: clamp(48px, 7vw, 78px) 20px;
+  border: 1px solid rgba(134, 245, 173, .11);
+  border-radius: 22px;
+  background: rgba(3, 17, 12, .72);
+  text-align: center;
+}
+.home-page .landing-feedback h2 {
+  margin: 11px 0 10px;
+  color: #f2fff6;
+  font-size: clamp(34px, 4.7vw, 60px);
+  line-height: 1;
+}
+.home-page .landing-feedback-heading > p {
+  margin: 0;
+  color: #82998d;
+  font-size: 12px;
+}
+.home-page .landing-feedback-options {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 32px;
+}
+.home-page .landing-feedback-options button {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(134, 245, 173, .11);
+  border-radius: 15px;
+  color: #657a6f;
+  background: #071a12;
+  cursor: pointer;
+  transition: color .14s ease, border-color .14s ease, background-color .14s ease;
+}
+.home-page .landing-feedback-options button:hover,
+.home-page .landing-feedback-options button.is-active {
+  color: #07140e;
+  border-color: #86f5ad;
+  background: #86f5ad;
+}
+.home-page .landing-feedback-options button:disabled { cursor: wait; }
+.home-page .landing-feedback-caption {
+  display: block;
+  min-height: 17px;
+  margin-top: 17px;
+  color: #9db2a7;
+  font-size: 10px;
+}
+
+@media (max-width: 860px) {
+  .home-page .landing-world-story { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .home-page .landing-world-story { gap: 28px; padding-block: 58px; }
+  .home-page .landing-world-story h2 { margin-bottom: 18px; }
+  .home-page .landing-world-story-about { padding: 22px 18px; border-radius: 16px; }
+  .home-page .landing-gameplay-tags { gap: 7px; margin-top: 24px; }
+  .home-page .landing-gameplay-tags span { min-width: 0; min-height: 34px; padding-inline: 12px; font-size: 8px; }
+  .home-page .landing-feedback-ticker { margin-bottom: 12px; }
+  .home-page .landing-feedback-ticker-track { justify-content: flex-start; }
+  .home-page .landing-feedback-ticker-item { min-height: 54px; padding: 8px 12px; }
+  .home-page .landing-feedback-heading { padding: 46px 12px; border-radius: 18px; }
+  .home-page .landing-feedback-options { justify-content: space-between; gap: 5px; }
+  .home-page .landing-feedback-options button { width: 44px; height: 44px; border-radius: 12px; }
+}
+
+@media (max-width: 720px) {
+  .home-page .landing-world-story,
+  .home-page .landing-feedback {
+    content-visibility: auto;
+  }
+  .home-page .landing-world-story { contain-intrinsic-size: auto 1050px; }
+  .home-page .landing-feedback { contain-intrinsic-size: auto 470px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .public-shell.fancy-public-theme *,
   .public-shell.fancy-public-theme *::before,

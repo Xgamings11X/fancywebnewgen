@@ -127,7 +127,30 @@ export default function LeaderboardPage({ settings = {} }) {
   const voteUrl = safeUrl(settings.vote_url || process.env.NEXT_PUBLIC_VOTE_URL);
 
   useEffect(() => {
-    try { setPlayer(JSON.parse(localStorage.getItem('mc_player') || 'null')); } catch {}
+    const controller = new AbortController();
+    let token = '';
+    try {
+      setPlayer(JSON.parse(localStorage.getItem('mc_player') || 'null'));
+      token = localStorage.getItem('mc_token') || '';
+    } catch {}
+    fetch('/api/auth/me', {
+      credentials:'include',
+      signal:controller.signal,
+      headers:token ? { Authorization:`Bearer ${token}` } : undefined,
+    })
+      .then(response => response.ok ? response.json() : null)
+      .then(result => {
+        if (result?.success && result.player) {
+          setPlayer(result.player);
+          localStorage.setItem('mc_player', JSON.stringify(result.player));
+        } else {
+          setPlayer(null);
+          localStorage.removeItem('mc_player');
+          localStorage.removeItem('mc_token');
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   const load = useCallback(async () => {

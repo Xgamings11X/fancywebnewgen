@@ -60,7 +60,32 @@ export default function InvoicePage({ order: initialOrder, settings = {} }) {
   const buyerUuid = order.buyer_uuid || (!order.is_gift ? order.player_uuid : '');
   const subtotal = Number(order.amount || 0) + Number(order.discount_amount || 0);
 
-  useEffect(() => { try { setPlayer(JSON.parse(localStorage.getItem('mc_player') || 'null')); } catch {} }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    let token = '';
+    try {
+      setPlayer(JSON.parse(localStorage.getItem('mc_player') || 'null'));
+      token = localStorage.getItem('mc_token') || '';
+    } catch {}
+    fetch('/api/auth/me', {
+      credentials:'include',
+      signal:controller.signal,
+      headers:token ? { Authorization:`Bearer ${token}` } : undefined,
+    })
+      .then(response => response.ok ? response.json() : null)
+      .then(result => {
+        if (result?.success && result.player) {
+          setPlayer(result.player);
+          localStorage.setItem('mc_player', JSON.stringify(result.player));
+        } else {
+          setPlayer(null);
+          localStorage.removeItem('mc_player');
+          localStorage.removeItem('mc_token');
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   useEffect(() => { paidRef.current = isPaid || paidRef.current; }, [isPaid]);
 
   const refresh = useCallback(async () => {

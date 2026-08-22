@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
-import FancyNav from '../components/FancyNav';
+import FancyNav, { PlayerAvatar } from '../components/FancyNav';
 import FancyFooter from '../components/FancyFooter';
 import LogoImage, { useTransparentLogo } from '../components/LogoImage';
 import Icon from '../components/Icon';
@@ -16,6 +16,33 @@ const FEATURES = [
   { id:'latency', icon:'bolt', tone:'green', title:'Performa Stabil', desc:'Konfigurasi server dan jaringan dioptimalkan untuk TPS stabil serta latensi yang nyaman.' },
   { id:'reward', icon:'trophy', tone:'blue', title:'Event & Reward', desc:'Daily reward, event komunitas, dan hadiah rutin membuat progres bermain selalu terasa menarik.' },
 ];
+
+const SOCIAL_CHANNELS = [
+  { key:'vote', field:'vote_url', fallback:'https://minecraft-mp.com/', icon:'star', label:'Vote', cls:'is-vote' },
+  { key:'discord', field:'discord_url', fallback:'https://discord.com/', icon:'discord', label:'Discord', cls:'is-discord' },
+  { key:'whatsapp', field:'whatsapp_url', fallback:'https://www.whatsapp.com/', icon:'whatsapp', label:'WhatsApp', cls:'is-whatsapp' },
+  { key:'tiktok', field:'tiktok_url', fallback:'https://www.tiktok.com/', icon:'tiktok', label:'TikTok', cls:'is-tiktok' },
+  { key:'instagram', field:'instagram_url', fallback:'https://www.instagram.com/', icon:'instagram', label:'Instagram', cls:'is-instagram' },
+  { key:'youtube', field:'youtube_url', fallback:'https://www.youtube.com/', icon:'youtube', label:'YouTube', cls:'is-youtube' },
+];
+
+const GAMEPLAY_TAGS = ['Skills', 'Landclaim', 'Quest', 'Crates', 'Levels', 'Reward', 'Clans'];
+const FEEDBACK_OPTIONS = [
+  { value:1, icon:'face-frown', label:'Sangat buruk' },
+  { value:2, icon:'face-concerned', label:'Kurang baik' },
+  { value:3, icon:'face-meh', label:'Cukup' },
+  { value:4, icon:'face-smile', label:'Baik' },
+  { value:5, icon:'face-grin', label:'Sangat baik' },
+];
+const FEEDBACK_PLACEHOLDERS = Array.from({ length:5 }, (_, index) => ({
+  id:`feedback-placeholder-${index + 1}`,
+  username:'Steve',
+  avatarUsername:'Steve',
+  uuid:null,
+  rating:0,
+  text:'Menunggu feedback',
+  placeholder:true,
+}));
 
 const SAFE_PROTOCOLS = new Set(['http:', 'https:']);
 
@@ -51,9 +78,34 @@ async function writeClipboard(text) {
 export async function getServerSideProps() {
   try {
     const { SettingsAsync } = await import('../lib/redis.js');
-    return { props: { settings: await SettingsAsync.get() } };
+    const storedSettings = await SettingsAsync.get();
+    const runtimeSocials = {
+      discord_url: process.env.NEXT_PUBLIC_DISCORD_URL || '',
+      vote_url: process.env.NEXT_PUBLIC_VOTE_URL || '',
+      whatsapp_url: process.env.NEXT_PUBLIC_WHATSAPP_URL || '',
+      instagram_url: process.env.NEXT_PUBLIC_INSTAGRAM_URL || '',
+      tiktok_url: process.env.NEXT_PUBLIC_TIKTOK_URL || '',
+      youtube_url: process.env.NEXT_PUBLIC_YOUTUBE_URL || '',
+    };
+
+    for (const key of Object.keys(runtimeSocials)) {
+      if (storedSettings?.[key]) runtimeSocials[key] = storedSettings[key];
+    }
+
+    return { props: { settings: { ...storedSettings, ...runtimeSocials } } };
   } catch {
-    return { props: { settings: {} } };
+    return {
+      props: {
+        settings: {
+          discord_url: process.env.NEXT_PUBLIC_DISCORD_URL || '',
+          vote_url: process.env.NEXT_PUBLIC_VOTE_URL || '',
+          whatsapp_url: process.env.NEXT_PUBLIC_WHATSAPP_URL || '',
+          instagram_url: process.env.NEXT_PUBLIC_INSTAGRAM_URL || '',
+          tiktok_url: process.env.NEXT_PUBLIC_TIKTOK_URL || '',
+          youtube_url: process.env.NEXT_PUBLIC_YOUTUBE_URL || '',
+        },
+      },
+    };
   }
 }
 
@@ -70,8 +122,13 @@ export default function HomePage({ settings }) {
   const [player, setPlayer] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [copied, setCopied] = useState('');
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const [feedbackIndex, setFeedbackIndex] = useState(0);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [status, setStatus] = useState({ loading:true, online:false, players:0, maxPlayers:0, version:'' });
   const copiedTimerRef = useRef(null);
+  const pendingFeedbackRef = useRef(0);
 
   const loadStatus = useCallback(async (signal) => {
     try {
@@ -95,6 +152,24 @@ export default function HomePage({ settings }) {
     }
   }, []);
 
+  const loadFeedback = useCallback(async (signal) => {
+    try {
+      const response = await fetch('/api/feedback', {
+        signal,
+        credentials:'same-origin',
+        headers:{ Accept:'application/json' },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data?.success && Array.isArray(data.feedback)) {
+        setFeedbackItems(data.feedback);
+        setFeedbackIndex(0);
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') console.error('Gagal memuat feedback:', error);
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -102,34 +177,34 @@ export default function HomePage({ settings }) {
     try {
       const cached = localStorage.getItem('mc_player');
       if (cached) setPlayer(JSON.parse(cached));
+      localStorage.removeItem('fancy_feedback_rating');
     } catch {
       localStorage.removeItem('mc_player');
     }
 
     let token = '';
     try { token = localStorage.getItem('mc_token') || ''; } catch {}
-    if (token) {
-      fetch('/api/auth/me', {
-        credentials:'include',
-        signal:controller.signal,
-        headers:{ Authorization:`Bearer ${token}` },
+    fetch('/api/auth/me', {
+      credentials:'include',
+      signal:controller.signal,
+      headers:token ? { Authorization:`Bearer ${token}` } : undefined,
+    })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (!active) return;
+        if (data?.success && data.player) {
+          setPlayer(data.player);
+          localStorage.setItem('mc_player', JSON.stringify(data.player));
+        } else {
+          setPlayer(null);
+          localStorage.removeItem('mc_player');
+          localStorage.removeItem('mc_token');
+        }
       })
-        .then(response => response.ok ? response.json() : null)
-        .then(data => {
-          if (!active) return;
-          if (data?.success && data.player) {
-            setPlayer(data.player);
-            localStorage.setItem('mc_player', JSON.stringify(data.player));
-          } else {
-            setPlayer(null);
-            localStorage.removeItem('mc_player');
-            localStorage.removeItem('mc_token');
-          }
-        })
-        .catch(() => {});
-    }
+      .catch(() => {});
 
     loadStatus(controller.signal);
+    loadFeedback(controller.signal);
     const interval = window.setInterval(() => {
       if (document.visibilityState === 'visible') loadStatus();
     }, 45_000);
@@ -145,7 +220,29 @@ export default function HomePage({ settings }) {
       document.removeEventListener('visibilitychange', handleVisibility);
       if (copiedTimerRef.current) window.clearTimeout(copiedTimerRef.current);
     };
-  }, [loadStatus]);
+  }, [loadFeedback, loadStatus]);
+
+  useEffect(() => {
+    const itemCount = Math.max(feedbackItems.length, FEEDBACK_PLACEHOLDERS.length);
+    if (itemCount < 2) return undefined;
+    const rotate = () => {
+      if (document.visibilityState === 'visible') {
+        setFeedbackIndex(current => (current + 1) % itemCount);
+      }
+    };
+    const interval = window.setInterval(rotate, 10_000);
+    return () => window.clearInterval(interval);
+  }, [feedbackItems.length]);
+
+  useEffect(() => {
+    if (!player) {
+      setFeedbackRating(0);
+      return;
+    }
+    const playerName = String(player.displayName || player.username || '').replace(/^\./, '').toLowerCase();
+    const ownFeedback = feedbackItems.find(item => String(item.username || '').toLowerCase() === playerName);
+    setFeedbackRating(ownFeedback?.rating || 0);
+  }, [feedbackItems, player]);
 
   const copyAddress = useCallback(async (text, label) => {
     try {
@@ -168,25 +265,74 @@ export default function HomePage({ settings }) {
       toast.error('Sesi lokal dibersihkan, tetapi server tidak dapat dihubungi');
     } finally {
       setPlayer(null);
+      setFeedbackRating(0);
       localStorage.removeItem('mc_player');
       localStorage.removeItem('mc_token');
     }
   }, []);
 
+  const submitFeedbackRating = useCallback(async (value, nextPlayer) => {
+    if (!nextPlayer || feedbackSubmitting) return;
+    setFeedbackSubmitting(true);
+    setFeedbackRating(value);
+    try {
+      let token = '';
+      try { token = localStorage.getItem('mc_token') || ''; } catch {}
+      const response = await fetch('/api/feedback', {
+        method:'POST',
+        credentials:'include',
+        headers:{
+          'Content-Type':'application/json',
+          Accept:'application/json',
+          ...(token ? { Authorization:`Bearer ${token}` } : {}),
+        },
+        body:JSON.stringify({ rating:value }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        setPlayer(null);
+        setShowLogin(true);
+        throw new Error('Sesi berakhir. Silakan login kembali.');
+      }
+      if (!response.ok || !data?.feedback) throw new Error(data?.message || 'Feedback gagal dikirim');
+
+      setFeedbackItems(current => [
+        data.feedback,
+        ...current.filter(item => String(item.username).toLowerCase() !== String(data.feedback.username).toLowerCase()),
+      ].slice(0, 10));
+      setFeedbackIndex(0);
+      toast.success('Terima kasih atas penilaianmu');
+    } catch (error) {
+      toast.error(error?.message || 'Feedback gagal dikirim');
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  }, [feedbackSubmitting]);
+
   const handleLoginSuccess = useCallback((nextPlayer) => {
     setPlayer(nextPlayer);
     try { localStorage.setItem('mc_player', JSON.stringify(nextPlayer)); } catch {}
     setShowLogin(false);
-  }, []);
+    const pendingRating = pendingFeedbackRef.current;
+    pendingFeedbackRef.current = 0;
+    if (pendingRating) submitFeedbackRating(pendingRating, nextPlayer);
+  }, [submitFeedbackRating]);
 
-  const socials = useMemo(() => [
-    { href:safeExternalUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL), icon:'star', label:'Vote MinecraftMP', cls:'is-vote' },
-    { href:safeExternalUrl(s.discord_url || process.env.NEXT_PUBLIC_DISCORD_URL), icon:'discord', label:'Discord', cls:'is-discord' },
-    { href:safeExternalUrl(s.whatsapp_url || process.env.NEXT_PUBLIC_WHATSAPP_URL), icon:'whatsapp', label:'WhatsApp', cls:'is-whatsapp' },
-    { href:safeExternalUrl(s.instagram_url || process.env.NEXT_PUBLIC_INSTAGRAM_URL), icon:'instagram', label:'Instagram', cls:'is-instagram' },
-    { href:safeExternalUrl(s.tiktok_url || process.env.NEXT_PUBLIC_TIKTOK_URL), icon:'tiktok', label:'TikTok', cls:'is-tiktok' },
-    { href:safeExternalUrl(s.youtube_url || process.env.NEXT_PUBLIC_YOUTUBE_URL), icon:'youtube', label:'YouTube', cls:'is-youtube' },
-  ].filter(item => item.href), [s]);
+  const handleFeedbackRating = useCallback((value) => {
+    if (!player) {
+      pendingFeedbackRef.current = value;
+      toast('Login Minecraft dulu untuk memberi feedback');
+      setShowLogin(true);
+      return;
+    }
+    submitFeedbackRating(value, player);
+  }, [player, submitFeedbackRating]);
+
+  const socialChannels = useMemo(() => SOCIAL_CHANNELS.map(item => ({
+    ...item,
+    href:safeExternalUrl(s[item.field] || item.fallback),
+  })), [s]);
+  const discordSocial = socialChannels.find(item => item.key === 'discord');
 
   const famousApplyUrl = safeExternalUrl(
     process.env.NEXT_PUBLIC_FAMOUS_APPLY_URL || s.famous_apply_url || s.discord_url || process.env.NEXT_PUBLIC_DISCORD_URL
@@ -197,6 +343,13 @@ export default function HomePage({ settings }) {
   const population = maxPlayers > 0 ? Math.min(100, Math.round((playerCount / maxPlayers) * 100)) : 0;
   const statusText = status.loading ? 'Memeriksa server' : status.online ? 'Server online' : 'Server offline';
   const heroTitleParts = heroTitle.includes(serverName) ? heroTitle.split(serverName) : null;
+  const visibleFeedbackItems = useMemo(() => {
+    const source = feedbackItems.length >= FEEDBACK_PLACEHOLDERS.length
+      ? feedbackItems
+      : [...feedbackItems, ...FEEDBACK_PLACEHOLDERS.slice(0, FEEDBACK_PLACEHOLDERS.length - feedbackItems.length)];
+    const count = Math.min(5, source.length);
+    return Array.from({ length:count }, (_, index) => source[(feedbackIndex + index) % source.length]);
+  }, [feedbackIndex, feedbackItems]);
 
   const endpointCards = [
     { key:'java', label:'Java Edition IP', value:javaIp, icon:'computer', copy:javaIp },
@@ -229,8 +382,8 @@ export default function HomePage({ settings }) {
         <header className="fn-home-hero fn-home-hero-v9">
           <div className="fn-home-ambient" aria-hidden="true"/>
           <div className="fn-fancy-backdrop" aria-hidden="true">
-            <div className="fn-fancy-backdrop-logo">
-              {s.logo_url ? <img src={s.logo_url} alt="" width={64} height={64} decoding="async" fetchPriority="high"/> : <LogoImage alt="" fetchPriority="high"/>}
+            <div className="fn-fancy-backdrop-logo" style={{ position:'absolute', contain:'layout paint' }}>
+              {s.logo_url ? <img src={s.logo_url} alt="" width={64} height={64} loading="lazy" decoding="async" fetchPriority="low"/> : <LogoImage alt="" loading="lazy" fetchPriority="low"/>}
             </div>
             <span className="fn-pixel fn-pixel-a"/><span className="fn-pixel fn-pixel-b"/>
             <span className="fn-pixel fn-pixel-c"/><span className="fn-pixel fn-pixel-d"/>
@@ -324,8 +477,8 @@ export default function HomePage({ settings }) {
               <span><small>COMMUNITY RANKING</small><strong>Top voter & donatur</strong></span>
               <Icon name="arrow-right" size={15}/>
             </Link>
-            {socials.find(item => item.label === 'Discord') ? (
-              <a href={socials.find(item => item.label === 'Discord').href} target="_blank" rel="noopener noreferrer" className="fn-dock-item">
+            {discordSocial ? (
+              <a href={discordSocial.href} target="_blank" rel="noopener noreferrer" className="fn-dock-item">
                 <span className="fn-dock-icon"><Icon name="discord" size={18}/></span>
                 <span><small>COMMUNITY</small><strong>Gabung Discord</strong></span>
                 <Icon name="arrow-up-right-from-square" size={14}/>
@@ -338,19 +491,36 @@ export default function HomePage({ settings }) {
             )}
           </div>
 
-          {socials.length > 0 && (
-            <div className="landing-socials anim-hero-up anim-d4">
-              <span>Temukan Fancy Network</span>
-              <div>
-                {socials.map(item => (
-                  <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className={`landing-social-link ${item.cls}`}>
-                    <Icon name={item.icon} size={15}/>{item.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
         </header>
+
+        <section id="community-links" className="landing-section landing-social-hub" aria-label="Media sosial Fancy Network">
+          <div className="landing-social-hub-grid">
+            {socialChannels.map(item => (
+              <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer" className={`landing-social-hub-card ${item.cls}`}>
+                <Icon name={item.icon} size={19}/>
+                <strong>{item.label}</strong>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="landing-section landing-world-story" aria-label="Tentang gameplay Fancy Network">
+          <article className="landing-world-story-primary">
+            <span className="landing-section-label">PENGALAMAN BERMAIN</span>
+            <h2 className="font-space">Survival Economy<br/><strong>Semi RPG.</strong></h2>
+            <p>Server ini dilengkapi berbagai sistem yang membuat progres bermain terasa lebih hidup dan terarah. Mulai dari skills, leveling, quest, dan crate, semuanya dirancang untuk menghadirkan perjalanan panjang yang tidak monoton—baik untuk pemain santai maupun pemain yang menyukai progres dan persaingan kompetitif.</p>
+            <div className="landing-gameplay-tags" aria-label="Fitur gameplay">
+              {GAMEPLAY_TAGS.map((tag, index) => <span key={tag} className={index % 2 ? 'tone-lime' : 'tone-green'}>{tag}</span>)}
+            </div>
+          </article>
+
+          <article className="landing-world-story-about">
+            <span className="landing-section-label">TENTANG SERVER</span>
+            <h2 className="font-space">Tentang<br/><strong>{serverName}.</strong></h2>
+            <p>{serverName} dibangun untuk menghadirkan pengalaman bermain yang nyaman dan berkualitas—tempat bagi pemain yang ingin menikmati Minecraft dengan progres seru, ekonomi aktif, dan suasana komunitas yang lebih hidup.</p>
+            <p>Server terus dikembangkan dengan fitur menarik, sistem stabil, serta pembaruan berkala. Mulai dari membangun base, menjelajahi dunia, bermain bersama teman, hingga mengejar item langka, setiap pemain memiliki perjalanan yang berkesan.</p>
+          </article>
+        </section>
 
         <section className="landing-section landing-features">
           <div className="landing-section-heading" data-anim="fade-up">
@@ -407,6 +577,46 @@ export default function HomePage({ settings }) {
               ))}
             </ul>
           </aside>
+        </section>
+
+        <section className="landing-section landing-feedback" aria-labelledby="feedback-title">
+          <div className="landing-feedback-ticker" aria-label="Feedback pemain terbaru" aria-live="polite">
+            <div key={feedbackIndex} className="landing-feedback-ticker-track">
+              {visibleFeedbackItems.map(item => (
+                <article key={item.id} className={`landing-feedback-ticker-item${item.placeholder ? ' is-placeholder' : ''}`}>
+                  <PlayerAvatar uuid={item.uuid} username={item.avatarUsername} size={34}/>
+                  <strong>{item.username}</strong>
+                  <span>{item.text || `${item.rating}/5`}</span>
+                  <i aria-hidden="true"/>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="landing-feedback-heading">
+            <span className="landing-section-label">FEEDBACK</span>
+            <h2 id="feedback-title" className="font-space">Bagaimana pengalamanmu?</h2>
+            <p>Pilih ekspresi yang paling sesuai. Nama dan skin Minecraft akan digunakan setelah login.</p>
+            <div className="landing-feedback-options" role="group" aria-label="Pilih penilaian pengalaman">
+              {FEEDBACK_OPTIONS.map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={feedbackRating === option.value ? 'is-active' : ''}
+                  aria-label={option.label}
+                  aria-pressed={feedbackRating === option.value}
+                  title={option.label}
+                  disabled={feedbackSubmitting}
+                  onClick={() => handleFeedbackRating(option.value)}
+                >
+                  <Icon name={feedbackSubmitting && feedbackRating === option.value ? 'spinner' : option.icon} size={29} spin={feedbackSubmitting && feedbackRating === option.value}/>
+                </button>
+              ))}
+            </div>
+            <strong className="landing-feedback-caption">
+              {feedbackSubmitting ? 'Mengirim penilaian...' : feedbackRating ? FEEDBACK_OPTIONS[feedbackRating - 1].label : 'Beri penilaian'}
+            </strong>
+          </div>
         </section>
         </main>
 
