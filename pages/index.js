@@ -239,7 +239,7 @@ export default function HomePage({ settings }) {
 
           <div className="fn-status-rail anim-hero-up anim-d1">
             <div className="fn-status-primary">
-              <span className={`fn-live-dot ${status.online ? 'is-online' : 'is-offline'}`}/>
+              <span className={`fn-live-dot ${status.loading ? 'is-checking' : status.online ? 'is-online' : 'is-offline'}`}/>
               <strong>{statusText}</strong>
               {status.version && <span>{status.version}</span>}
             </div>
@@ -285,7 +285,7 @@ export default function HomePage({ settings }) {
                   </div>
                   <div><small>CONNECT TO</small><strong>{serverName}</strong></div>
                 </div>
-                <span className={`fn-server-state ${status.online ? 'is-online' : 'is-offline'}`}>
+                <span className={`fn-server-state ${status.loading ? 'is-checking' : status.online ? 'is-online' : 'is-offline'}`}>
                   {status.loading ? 'CHECKING' : status.online ? 'ONLINE' : 'OFFLINE'}
                 </span>
               </div>

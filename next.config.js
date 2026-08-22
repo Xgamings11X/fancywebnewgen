@@ -5,6 +5,12 @@ module.exports = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
 
+  // Inline CSS yang benar-benar dibutuhkan di atas fold, lalu muat stylesheet
+  // besar secara non-blocking. Ini menargetkan audit render-blocking PSI.
+  experimental: {
+    optimizeCss: true,
+  },
+
   images: {
     // ✅ DIAKTIFKAN — Next.js sekarang auto-convert ke WebP/AVIF
     // dan generate srcset responsif. Ini sendiri bisa +15 poin PageSpeed.
@@ -33,11 +39,6 @@ module.exports = {
       // Gambar publik — cache 7 hari
       {
         source: '/images/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' }],
-      },
-      // Gambar upload user — cache 7 hari
-      {
-        source: '/uploads/(.*)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' }],
       },
       // API tidak di-cache

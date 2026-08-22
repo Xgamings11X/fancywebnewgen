@@ -3474,3 +3474,87 @@ html:has(.fancy-public-theme) {
     transition-duration: .01ms !important;
   }
 }
+
+/* PSI accessibility: footer navigation links need a complete 44px target,
+   including desktop audits that emulate a coarse pointer. */
+.fancy-public-theme .public-footer-column > a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-block: 8px;
+}
+
+/* V27 — clearer server status and a cleaner Home section hand-off. */
+.home-page .landing-features {
+  border-top: 0 !important;
+}
+
+.fancy-public-theme .fn-live-dot {
+  box-shadow: 0 0 0 4px rgba(232, 83, 91, .11), 0 0 14px rgba(232, 83, 91, .58);
+}
+.fancy-public-theme .fn-live-dot.is-online {
+  background: #78f1a2;
+  box-shadow: 0 0 0 4px rgba(120, 241, 162, .11), 0 0 14px rgba(120, 241, 162, .58);
+}
+.fancy-public-theme .fn-live-dot.is-checking {
+  background: #65d5ff;
+  box-shadow: 0 0 0 4px rgba(101, 213, 255, .1), 0 0 14px rgba(101, 213, 255, .5);
+}
+
+.fancy-public-theme .fn-server-state {
+  min-width: 72px;
+  padding: 7px 10px;
+  text-align: center;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  line-height: 1;
+}
+.fancy-public-theme .fn-server-state.is-online {
+  color: #062012;
+  border-color: #78f1a2;
+  background: #78f1a2;
+  box-shadow: 0 0 0 3px rgba(120, 241, 162, .1);
+}
+.fancy-public-theme .fn-server-state.is-offline {
+  color: #fff;
+  border-color: #e8535b;
+  background: #bd3843;
+  box-shadow: 0 0 0 3px rgba(232, 83, 91, .1);
+}
+.fancy-public-theme .fn-server-state.is-checking {
+  color: #dff8ff;
+  border-color: rgba(101, 213, 255, .62);
+  background: rgba(20, 91, 116, .8);
+}
+
+@media (max-width: 720px) {
+  .home-page .fn-home-hero-v9 .fn-status-rail {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 9px;
+    padding: 10px;
+  }
+  .home-page .fn-status-primary {
+    width: 100%;
+    min-height: 36px;
+    justify-content: center;
+    padding-inline: 10px;
+    border: 1px solid rgba(134, 245, 173, .12);
+    border-radius: 10px;
+    background: rgba(1, 12, 8, .62);
+  }
+  .home-page .fn-status-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .home-page .fn-status-meta span {
+    min-width: 0;
+    min-height: 34px;
+    padding-inline: 6px;
+    border: 1px solid rgba(134, 245, 173, .09);
+    background: rgba(1, 12, 8, .42);
+    white-space: nowrap;
+  }
+}
