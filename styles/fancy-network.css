@@ -3590,9 +3590,9 @@ html:has(.fancy-public-theme) {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  contain: paint;
+  backface-visibility: hidden;
   will-change: transform;
-  animation: fn-feedback-ticker-scroll 12s linear infinite;
+  animation: fn-feedback-ticker-scroll var(--feedback-ticker-duration, 24s) linear infinite;
 }
 @keyframes fn-feedback-ticker-scroll {
   from { transform: translate3d(0, 0, 0); }

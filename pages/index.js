@@ -124,7 +124,6 @@ export default function HomePage({ settings }) {
   const [copied, setCopied] = useState('');
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackItems, setFeedbackItems] = useState([]);
-  const [feedbackIndex, setFeedbackIndex] = useState(0);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [status, setStatus] = useState({ loading:true, online:false, players:0, maxPlayers:0, version:'' });
   const copiedTimerRef = useRef(null);
@@ -163,7 +162,6 @@ export default function HomePage({ settings }) {
       const data = await response.json();
       if (data?.success && Array.isArray(data.feedback)) {
         setFeedbackItems(data.feedback);
-        setFeedbackIndex(0);
       }
     } catch (error) {
       if (error?.name !== 'AbortError') console.error('Gagal memuat feedback:', error);
@@ -221,19 +219,6 @@ export default function HomePage({ settings }) {
       if (copiedTimerRef.current) window.clearTimeout(copiedTimerRef.current);
     };
   }, [loadFeedback, loadStatus]);
-
-  useEffect(() => {
-    const itemCount = Math.max(feedbackItems.length, FEEDBACK_PLACEHOLDERS.length);
-    if (itemCount < 2) return undefined;
-    const rotate = () => {
-      if (document.visibilityState === 'visible') {
-        const step = itemCount > FEEDBACK_PLACEHOLDERS.length ? FEEDBACK_PLACEHOLDERS.length : 1;
-        setFeedbackIndex(current => current + step >= itemCount ? 0 : current + step);
-      }
-    };
-    const interval = window.setInterval(rotate, 12_000);
-    return () => window.clearInterval(interval);
-  }, [feedbackItems.length]);
 
   useEffect(() => {
     if (!player) {
@@ -301,7 +286,6 @@ export default function HomePage({ settings }) {
         data.feedback,
         ...current.filter(item => String(item.username).toLowerCase() !== String(data.feedback.username).toLowerCase()),
       ].slice(0, 10));
-      setFeedbackIndex(0);
       toast.success('Terima kasih atas penilaianmu');
     } catch (error) {
       toast.error(error?.message || 'Feedback gagal dikirim');
@@ -344,13 +328,12 @@ export default function HomePage({ settings }) {
   const population = maxPlayers > 0 ? Math.min(100, Math.round((playerCount / maxPlayers) * 100)) : 0;
   const statusText = status.loading ? 'Memeriksa server' : status.online ? 'Server online' : 'Server offline';
   const heroTitleParts = heroTitle.includes(serverName) ? heroTitle.split(serverName) : null;
-  const visibleFeedbackItems = useMemo(() => {
+  const tickerFeedbackItems = useMemo(() => {
     const source = feedbackItems.length >= FEEDBACK_PLACEHOLDERS.length
       ? feedbackItems
       : [...feedbackItems, ...FEEDBACK_PLACEHOLDERS.slice(0, FEEDBACK_PLACEHOLDERS.length - feedbackItems.length)];
-    const count = Math.min(5, source.length);
-    return Array.from({ length:count }, (_, index) => source[(feedbackIndex + index) % source.length]);
-  }, [feedbackIndex, feedbackItems]);
+    return source.slice(0, 10);
+  }, [feedbackItems]);
 
   const endpointCards = [
     { key:'java', label:'Java Edition IP', value:javaIp, icon:'computer', copy:javaIp },
@@ -582,12 +565,15 @@ export default function HomePage({ settings }) {
 
         <section className="landing-section landing-feedback" aria-labelledby="feedback-title">
           <div className="landing-feedback-ticker" aria-label="Feedback pemain terbaru" aria-live="polite">
-            <div key={feedbackIndex} className="landing-feedback-ticker-track">
-              {[...visibleFeedbackItems, ...visibleFeedbackItems].map((item, index) => (
+            <div
+              className="landing-feedback-ticker-track"
+              style={{ '--feedback-ticker-duration':`${Math.max(20, tickerFeedbackItems.length * 3.2)}s` }}
+            >
+              {[...tickerFeedbackItems, ...tickerFeedbackItems].map((item, index) => (
                 <article
                   key={`${item.id}-${index}`}
                   className={`landing-feedback-ticker-item${item.placeholder ? ' is-placeholder' : ''}`}
-                  aria-hidden={index >= visibleFeedbackItems.length ? 'true' : undefined}
+                  aria-hidden={index >= tickerFeedbackItems.length ? 'true' : undefined}
                 >
                   <PlayerAvatar uuid={item.uuid} username={item.avatarUsername} size={34}/>
                   <strong>{item.username}</strong>
