@@ -52,7 +52,8 @@ function RankingBoard({ title, eyebrow, type, entries, emptyText }) {
     <section className="leaderboard-board" data-kind={type}>
       <header>
         <span className="leaderboard-board-icon"><Icon name={type === 'voter' ? 'star' : 'cart-shopping'} size={20}/></span>
-        <div><small>{eyebrow}</small><h2>{title}</h2></div>
+        <div className="leaderboard-board-title"><small>{eyebrow}</small><h2>{title}</h2></div>
+        <span className="leaderboard-board-summary"><strong>{entries.length}</strong><small>PERINGKAT</small></span>
       </header>
       {entries.length ? (
         <>
@@ -69,7 +70,14 @@ function RankingBoard({ title, eyebrow, type, entries, emptyText }) {
           </div>
         </>
       ) : (
-        <div className="leaderboard-empty"><Icon name="trophy" size={28}/><strong>Belum ada peringkat</strong><p>{emptyText}</p></div>
+        <div className="leaderboard-empty">
+          <span className="leaderboard-empty-visual"><Icon name="trophy" size={30}/></span>
+          <div className="leaderboard-empty-copy">
+            <strong>Belum ada peringkat</strong>
+            <p>{emptyText}</p>
+          </div>
+          <small className="leaderboard-empty-note">Peringkat akan tampil otomatis saat data pertama tersedia.</small>
+        </div>
       )}
     </section>
   );

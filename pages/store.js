@@ -276,7 +276,7 @@ export default function StorePage({ settings, categories: initialCategories, pro
         <link rel="icon" type="image/png" href={s.logo_url || logoSrc || '/favicon.png'} />
       </Head>
 
-      <div className="public-shell fancy-public-theme">
+      <div className="public-shell fancy-public-theme store-page">
         <FancyNav player={player} onLoginClick={() => setShowLogin(true)} onLogout={handleLogout} settings={s} />
 
         <main className="store-redesign store-fancy-page">

@@ -222,7 +222,7 @@ export default function HomePage({ settings }) {
         <link rel="icon" type="image/png" href={s.logo_url || logoSrc || '/favicon.png'}/>
       </Head>
 
-      <div className="public-shell fancy-public-theme">
+      <div className="public-shell fancy-public-theme home-page">
         <FancyNav player={player} onLoginClick={() => setShowLogin(true)} onLogout={handleLogout} settings={s}/>
 
         <main className="landing-page landing-fancy-page">
