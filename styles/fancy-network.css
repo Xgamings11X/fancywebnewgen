@@ -28,6 +28,8 @@
   --border: var(--fn-line);
   --fn-radius: 22px;
   --fn-max: 1220px;
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   color: var(--fn-text);
   background:
@@ -39,7 +41,7 @@
 
 .fancy-public-theme::before {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
@@ -480,7 +482,6 @@
 .fancy-public-theme .store-product-kicker { color: var(--fn-green); }
 .fancy-public-theme .store-product-price { color: var(--fn-lime); }
 .fancy-public-theme .store-product-buy { color: #07120e; background: linear-gradient(135deg, var(--fn-lime), var(--fn-green)); border: 0; border-radius: 11px 4px 11px 4px; }
-.fancy-public-theme .store-product-expand { color: var(--fn-green); }
 .fancy-public-theme .store-empty-state { border-color: var(--fn-line); background: rgba(255,255,255,.025); color: var(--fn-muted); }
 
 /* ---------- Support: task-focused workspace, not dashboard cards ---------- */
@@ -2290,108 +2291,6 @@ body {
 
 
 /* ================================================================
-   FANCY NETWORK V17 — high-FPS glass/glow rendering overrides
-   Visual effects are retained. Heavy effects are narrowed, isolated and
-   composited so scrolling does not constantly repaint large regions.
-   ================================================================ */
-.fancy-public-theme .public-nav {
-  /* Keep real glass, but use a much smaller sampling radius than the old 22px. */
-  background: linear-gradient(180deg, rgba(7,20,15,.90), rgba(3,12,8,.94)) !important;
-  backdrop-filter: blur(8px) saturate(116%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(116%) !important;
-  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
-  contain: paint;
-}
-.fancy-public-theme .public-nav.is-scrolled {
-  background: linear-gradient(180deg, rgba(7,20,15,.95), rgba(3,12,8,.97)) !important;
-  backdrop-filter: blur(5px) saturate(110%) !important;
-  -webkit-backdrop-filter: blur(5px) saturate(110%) !important;
-  border-bottom-color: rgba(174,255,205,.18) !important;
-  box-shadow: 0 10px 28px rgba(0,0,0,.14) !important;
-}
-
-/* Preserve the glass look on hero controls. The live blur is kept, but narrowed
-   from 12–18px to 4–6px and paired with denser gradients so it looks equally rich. */
-.fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
-.fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span,
-.fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary,
-.fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
-  backdrop-filter: blur(4px) saturate(112%) !important;
-  -webkit-backdrop-filter: blur(4px) saturate(112%) !important;
-}
-.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel {
-  background: linear-gradient(145deg, rgba(7,31,21,.93), rgba(3,18,13,.96));
-  backdrop-filter: blur(6px) saturate(116%) !important;
-  -webkit-backdrop-filter: blur(6px) saturate(116%) !important;
-  contain: paint;
-  transform: translateZ(0);
-}
-.fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
-  background: linear-gradient(145deg, rgba(5,22,16,.86), rgba(2,14,10,.90));
-  transform: translateZ(0);
-}
-.fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary {
-  background: linear-gradient(145deg, rgba(7,25,18,.78), rgba(3,16,12,.86));
-}
-.fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
-.fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span {
-  background: linear-gradient(145deg, rgba(5,22,15,.72), rgba(2,14,10,.82));
-}
-
-/* Keep the warm halo. Reducing the blur radius and isolating the paint gives the
-   same soft edge without a 260px live blur texture being rebuilt unnecessarily. */
-.fancy-public-theme .fn-home-hero-v9 .fn-connect-panel::before {
-  filter: blur(12px) !important;
-  opacity: .82;
-  transform: translateZ(0);
-}
-
-/* Keep the blurred crest and pixel glow, but cache them as isolated compositor
-   layers and use smaller kernels. No visual element is removed. */
-.fancy-public-theme .fn-fancy-backdrop-logo {
-  filter: blur(8px) saturate(130%) contrast(104%);
-  contain: paint;
-  will-change: transform;
-  transform: translate3d(-50%,-50%,0) rotate(-3deg) scale(1.03);
-}
-.fancy-public-theme .fn-fancy-backdrop-logo::after {
-  filter: blur(16px);
-  opacity: .82;
-  transform: translateZ(0);
-}
-.fancy-public-theme .fn-pixel {
-  filter: blur(2px);
-  box-shadow: 0 0 26px currentColor;
-  will-change: transform;
-}
-
-@media (max-width: 900px), (pointer: coarse) {
-  .fancy-public-theme .public-nav {
-    /* Real glass remains on mobile too; the small 3px radius is much cheaper. */
-    background: linear-gradient(180deg, rgba(6,18,13,.955), rgba(3,12,8,.975)) !important;
-    backdrop-filter: blur(3px) saturate(106%) !important;
-    -webkit-backdrop-filter: blur(3px) saturate(106%) !important;
-  }
-  .fancy-public-theme .fn-home-hero-v9 .fn-hero-kicker,
-  .fancy-public-theme .fn-home-hero-v9 .fn-mode-chips span,
-  .fancy-public-theme .fn-home-hero-v9 .fn-cta-secondary,
-  .fancy-public-theme .fn-home-hero-v9 .fn-dock-item {
-    backdrop-filter: blur(2px) saturate(106%) !important;
-    -webkit-backdrop-filter: blur(2px) saturate(106%) !important;
-  }
-  .fancy-public-theme .fn-home-hero-v9 .fn-connect-panel {
-    backdrop-filter: blur(3px) saturate(108%) !important;
-    -webkit-backdrop-filter: blur(3px) saturate(108%) !important;
-  }
-  .fancy-public-theme .fn-fancy-backdrop-logo {
-    filter: blur(7px) saturate(120%) contrast(102%);
-    opacity: .18;
-  }
-  .fancy-public-theme .fn-fancy-backdrop-logo::after { filter: blur(10px); opacity: .66; }
-  .fancy-public-theme .fn-pixel { filter: blur(1px); box-shadow: 0 0 14px currentColor; }
-}
-
-/* ================================================================
    FANCY NETWORK V18 — unified public palette + low-paint glass
    Static translucent gradients keep the depth of the design without
    continuously re-sampling the page behind every glass surface on scroll.
@@ -2422,9 +2321,6 @@ html:has(.fancy-public-theme) {
   background: linear-gradient(180deg, rgba(7,20,15,.975), rgba(3,12,8,.985)) !important;
   /* Paint containment clipped the fixed mobile dropdown to the nav's height. */
   contain: none;
-}
-.fancy-public-theme .public-nav.is-scrolled {
-  background: linear-gradient(180deg, rgba(7,20,15,.99), rgba(3,12,8,.995)) !important;
 }
 .fancy-public-theme .public-mobile-login-button {
   color: #07140f !important;
@@ -2504,16 +2400,6 @@ html:has(.fancy-public-theme) {
   background: var(--fn-blue) !important;
 }
 
-/* Skip layout/paint work for substantial sections until they approach the
-   viewport, while reserving space so the scrollbar does not jump. */
-.fancy-public-theme .landing-features,
-.fancy-public-theme .landing-famous-program,
-.fancy-public-theme .store-catalog-section,
-.fancy-public-theme .support-workspace,
-.fancy-public-theme .public-footer {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 720px;
-}
 .fancy-public-theme .store-product-card {
   contain: layout paint style;
 }
@@ -2521,4 +2407,128 @@ html:has(.fancy-public-theme) {
 @media (max-width: 900px), (pointer: coarse) {
   .fancy-public-theme .fn-fancy-backdrop-logo { opacity: .08; filter: saturate(112%) !important; }
   .fancy-public-theme .fn-pixel { opacity: .09; box-shadow: 0 0 16px currentColor; }
+}
+
+/* ================================================================
+   FANCY NETWORK V19 — stable layered canvas + readable support tabs
+   No viewport-fixed texture, large blur, or section activation spike remains.
+   ================================================================ */
+.public-shell.fancy-public-theme {
+  background:
+    radial-gradient(ellipse at 5% 6%, rgba(69,209,132,.13), transparent 34%),
+    radial-gradient(ellipse at 96% 19%, rgba(72,190,223,.09), transparent 31%),
+    radial-gradient(ellipse at 55% 66%, rgba(134,245,173,.055), transparent 37%),
+    linear-gradient(180deg, #071611 0%, #04100c 46%, #071510 100%) !important;
+}
+
+.fancy-public-theme::before {
+  position: absolute;
+  opacity: .42;
+  background-image:
+    linear-gradient(rgba(134,245,173,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,213,255,.022) 1px, transparent 1px),
+    repeating-linear-gradient(124deg, transparent 0 126px, rgba(134,245,173,.018) 126px 127px, transparent 127px 252px);
+  background-size: 72px 72px, 72px 72px, 100% 100%;
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.82) 58%, transparent 100%);
+}
+
+.fancy-public-theme .fn-home-hero-v9::before {
+  background:
+    linear-gradient(112deg, rgba(2,15,10,.16), rgba(5,25,17,.05) 44%, rgba(2,14,11,.12)),
+    repeating-linear-gradient(90deg, rgba(134,245,173,.025) 0 1px, transparent 1px 92px),
+    repeating-linear-gradient(0deg, rgba(101,213,255,.02) 0 1px, transparent 1px 92px) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.fancy-public-theme .fn-home-hero-v9 .fn-home-ambient {
+  background:
+    radial-gradient(ellipse at 9% 18%, rgba(134,245,173,.18), transparent 28%),
+    radial-gradient(ellipse at 92% 24%, rgba(101,213,255,.14), transparent 27%),
+    radial-gradient(ellipse at 55% 86%, rgba(69,209,132,.08), transparent 34%);
+  filter: none !important;
+}
+
+.fancy-public-theme .fn-fancy-backdrop {
+  background:
+    linear-gradient(105deg, rgba(2,12,8,.62), transparent 32%, transparent 68%, rgba(2,12,10,.58)),
+    radial-gradient(circle at 75% 46%, rgba(101,213,255,.06), transparent 22%),
+    radial-gradient(circle at 23% 64%, rgba(134,245,173,.065), transparent 24%);
+  mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+}
+.fancy-public-theme .fn-fancy-backdrop::before {
+  inset: 0;
+  opacity: .28;
+  background:
+    linear-gradient(rgba(134,245,173,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,213,255,.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: none;
+}
+.fancy-public-theme .fn-fancy-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 10% 7%;
+  border: 1px solid rgba(134,245,173,.055);
+  border-radius: 28px 6px 28px 6px;
+  background:
+    linear-gradient(90deg, transparent 0 14%, rgba(134,245,173,.055) 14% 14.15%, transparent 14.15% 76%, rgba(101,213,255,.05) 76% 76.15%, transparent 76.15%),
+    linear-gradient(0deg, transparent 0 23%, rgba(101,213,255,.045) 23% 23.15%, transparent 23.15% 81%, rgba(134,245,173,.05) 81% 81.15%, transparent 81.15%);
+}
+
+.fancy-public-theme .fn-fancy-backdrop-logo,
+.fancy-public-theme .fn-fancy-backdrop-logo::after {
+  filter: none !important;
+}
+.fancy-public-theme .fn-fancy-backdrop-logo {
+  left: auto;
+  right: 5%;
+  top: 50%;
+  width: min(32vw, 410px);
+  transform: translateY(-50%) rotate(-4deg);
+  opacity: .055;
+  contain: paint;
+}
+.fancy-public-theme .fn-fancy-backdrop-logo::after {
+  inset: -17%;
+  border: 1px solid rgba(134,245,173,.16);
+  background: radial-gradient(circle, rgba(134,245,173,.07), transparent 67%);
+  opacity: .8;
+}
+
+.fancy-public-theme .fn-pixel,
+.fancy-public-theme .fn-pixel:nth-child(n) {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  opacity: .34;
+  filter: none !important;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.fancy-public-theme [data-anim="fade-up"] {
+  transform: translateY(14px);
+  transition-duration: .4s, .4s;
+}
+.fancy-public-theme [data-anim="fade-up"].anim-visible { transform: translateY(0); }
+
+.fancy-public-theme .support-main-tabs > button small {
+  color: #9fbaaa !important;
+  opacity: 1 !important;
+}
+.fancy-public-theme .support-main-tabs > button.active small {
+  color: #1e543d !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .fancy-public-theme .fn-fancy-backdrop-logo {
+    left: auto;
+    right: -8%;
+    width: min(72vw, 430px);
+    transform: translateY(-50%) rotate(-4deg);
+    opacity: .04;
+    filter: none !important;
+  }
+  .fancy-public-theme .fn-pixel { opacity: .24; box-shadow: 0 0 9px currentColor; }
 }

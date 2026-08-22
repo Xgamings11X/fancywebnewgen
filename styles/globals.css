@@ -1205,14 +1205,6 @@ body.page-loaded .anim-hero-up { opacity: 1; transform: translateY(0); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* ── Ambient background particle drift ──────────────────────────── */
-@keyframes particleDrift {
-  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
-  33%  { transform: translateY(-30px) translateX(15px) scale(1.1); opacity: 0.7; }
-  66%  { transform: translateY(-15px) translateX(-10px) scale(0.95); opacity: 0.5; }
-  100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
-}
-
 /* ── Nav entrance ───────────────────────────────────────────────── */
 /* Navbar centering pakai left:0 right:0 margin:auto — TIDAK pakai
    transform agar tidak ada konflik dengan animasi apapun */
@@ -1267,22 +1259,6 @@ body.page-loaded .anim-hero-up { opacity: 1; transform: translateY(0); }
   background: rgba(255,255,255,0.3);
 }
 
-/* ── Modal backdrop + slide-up ──────────────────────────────────── */
-.modal-backdrop-anim {
-  animation: backdropFadeIn 0.28s ease both;
-}
-@keyframes backdropFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.modal-content-anim {
-  animation: modalSlideUp 0.36s cubic-bezier(0.22,1,0.36,1) both;
-}
-@keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(32px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 /* ── Section heading underline draw ────────────────────────────── */
 .section-heading-line {
   position: relative;
@@ -1312,8 +1288,7 @@ body.page-loaded .section-heading-line::after {
   [data-anim], .anim-hero, .anim-hero-up, .fn-nav,
   #page-transition-overlay, #__next > *,
   .fn-logo-img, .fn-logo-fallback-icon, .fn-mobile-menu, .fn-mobile-link,
-  .fn-hamburger-icon, .fn-nav-link,
-  .hero-orb, .hero-logo-img, .hero-logo-fallback, .anim-pulse-dot {
+  .fn-hamburger-icon, .fn-nav-link, .anim-pulse-dot {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
@@ -1828,22 +1803,6 @@ body.page-loaded .section-heading-line::after {
    ════════════════════════════════════════════════════════════════════ */
 
 .hero-header { min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:160px 24px 60px; }
-
-/* Floating ambient orbs — 3 elemen tetap, posisi/ukuran/delay beda per orb,
-   jadi 3 class bernama (bukan loop), bukan inline style. */
-.hero-orbs { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
-.hero-orb { position:absolute; border-radius:50%; }
-.hero-orb-1 { top:15%; left:10%; width:300px; height:300px; background:radial-gradient(circle,rgba(255,107,0,0.06) 0%,transparent 70%); animation:particleDrift 8s ease-in-out infinite; }
-.hero-orb-2 { top:60%; right:8%; width:200px; height:200px; background:radial-gradient(circle,rgba(255,107,0,0.04) 0%,transparent 70%); animation:particleDrift 11s ease-in-out infinite 2s; }
-.hero-orb-3 { top:40%; left:60%; width:150px; height:150px; background:radial-gradient(circle,rgba(255,148,66,0.05) 0%,transparent 70%); animation:particleDrift 7s ease-in-out infinite 4s; }
-
-.hero-logo-wrap { margin:0 auto 32px; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
-.hero-logo-img, .hero-logo-fallback {
-  display:block; object-fit:contain;
-  animation:logoFloat 3.5s ease-in-out infinite;
-}
-.hero-logo-img { max-width:180px; max-height:180px; background:transparent; filter:drop-shadow(0 8px 32px rgba(255,107,0,0.45)); }
-.hero-logo-fallback { width:160px; height:160px; filter:drop-shadow(0 8px 32px rgba(255,107,0,0.55)) drop-shadow(0 0 60px rgba(255,107,0,0.2)); }
 
 .hero-tagline { margin-bottom:24px; position:relative; z-index:1; }
 .hero-title { font-size:clamp(28px,6vw,48px); font-weight:700; line-height:1.2; margin-bottom:16px; max-width:800px; position:relative; z-index:1; }
@@ -3101,11 +3060,6 @@ body {
   transform: translateX(-50%);
   transition: top .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.public-nav.is-scrolled {
-  top: 10px;
-  border-color: var(--public-line);
-  box-shadow: 0 12px 34px #10111424;
-}
 .public-nav-brand {
   display: inline-flex;
   min-width: 0;
@@ -3530,7 +3484,6 @@ body {
 .store-product-benefits li { display: grid; grid-template-columns: 19px minmax(0, 1fr); align-items: start; gap: 7px; color: #475467; font-size: 10px; line-height: 1.45; }
 .store-product-benefits li > span { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 6px; color: #ffffff; background: var(--public-green); }
 .store-product-empty-benefit { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--public-muted); font-size: 10px; }
-.store-product-expand { display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; padding: 8px; border: 0; border-radius: 8px; color: var(--product-accent); background: #ffffff; font-size: 9px; font-weight: 800; cursor: pointer; }
 .store-product-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 15px 20px 20px; }
 .store-product-price { display: grid; min-width: 0; }
 .store-product-price > span { color: #8a93a3; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -4041,10 +3994,6 @@ body,
   background: #ffffff;
   background-image: none !important;
   box-shadow: 0 14px 42px #24170f1a;
-}
-.orange-public-theme .public-nav.is-scrolled {
-  border-color: var(--line-warm);
-  box-shadow: 0 10px 30px #24170f20;
 }
 .orange-public-theme .public-nav-logo {
   border: 1px solid var(--orange-100);
@@ -4716,7 +4665,6 @@ body,
   color: #ffffff;
   background: var(--orange-500);
 }
-.store-product-expand { color: var(--orange-600); }
 .store-product-footer {
   border-color: var(--line-warm);
   background: #ffffff;
@@ -5773,11 +5721,6 @@ body,
   background: #92f78e;
   box-shadow: 0 0 10px rgba(146,247,142,.45);
 }
-.store-fancy-page .store-product-card.no-icon-card .store-product-expand {
-  border: 1px solid rgba(140,255,161,.12);
-  color: #9bf69a;
-  background: rgba(255,255,255,.025);
-}
 .store-fancy-page .store-product-card.no-icon-card .store-product-footer {
   border-top: 1px solid rgba(136,255,168,.08);
   padding-top: 16px;
@@ -6798,18 +6741,239 @@ body { background-attachment: scroll; }
   transition-duration: .20s, .16s;
 }
 
-/* JS updates this once per requestAnimationFrame. */
+/* Route-only progress indicator: ordinary scrolling performs no JS/CSS update. */
 #scroll-progress {
-  transition: none !important;
+  opacity: 0;
+  transition: opacity .12s ease !important;
   contain: layout paint style;
+  will-change: auto;
+}
+#scroll-progress.is-routing {
+  opacity: 1;
   will-change: transform;
 }
-#scroll-progress.is-routing { opacity: 1; }
+#scroll-progress {
+  background: #71efa1 !important;
+  background-image: linear-gradient(90deg, #baff70, #71efa1, #57d9e9) !important;
+  box-shadow: none !important;
+}
 
 @media (max-width: 900px), (pointer: coarse) {
   /* Keep smooth anchor scrolling; route transition is compositor-only. */
   #page-transition-overlay {
     transition-duration: .18s, .12s;
     box-shadow: 16px 0 36px rgba(0,0,0,.18);
+  }
+}
+
+/* V19 — Admin login palette hardening. Error red stays semantic; every
+   decorative/focus accent is explicitly mapped to the emerald brand. */
+.adm-login-wrap {
+  --primary: var(--adm-mint);
+  --primary-light: var(--adm-lime);
+  --primary-glow: rgba(113,239,161,.18);
+  --border: var(--adm-line);
+}
+.adm-login-box {
+  border-color: rgba(186,255,112,.24) !important;
+  background: #051610 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.adm-login-wrap :focus-visible { outline-color: var(--adm-lime) !important; }
+
+/* V20 — Portrait product cards on desktop. auto-fill keeps each card at a
+   deliberate catalogue width instead of stretching a single result edge-to-edge. */
+@media (min-width: 901px) {
+  .store-fancy-page .store-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 340px)) !important;
+    justify-content: start !important;
+    align-items: stretch !important;
+  }
+  .store-fancy-page .store-product-card.no-icon-card {
+    width: 100% !important;
+    max-width: 340px !important;
+    height: 660px !important;
+    min-height: 660px !important;
+    max-height: 660px !important;
+  }
+  .store-fancy-page .store-product-card.no-icon-card .store-product-media {
+    flex-basis: 220px;
+    height: 220px;
+    min-height: 220px;
+  }
+}
+
+/* A long benefit list scrolls inside the card, so every product keeps the same
+   portrait silhouette regardless of how many features it contains. */
+.store-fancy-page .store-product-heading h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.store-fancy-page .store-product-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.store-fancy-page .store-product-benefits {
+  display: flex;
+  height: 158px;
+  min-height: 158px;
+  max-height: 158px;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+.store-fancy-page .store-product-benefits ul {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 7px;
+  scrollbar-color: rgba(126,242,160,.68) rgba(3,18,13,.32);
+  scrollbar-width: thin;
+}
+.store-fancy-page .store-product-benefits ul::-webkit-scrollbar { width: 4px; }
+.store-fancy-page .store-product-benefits ul::-webkit-scrollbar-track { background: rgba(3,18,13,.32); }
+.store-fancy-page .store-product-benefits ul::-webkit-scrollbar-thumb { background: rgba(126,242,160,.68); border-radius: 999px; }
+.store-fancy-page .store-product-benefits ul:focus-visible {
+  outline: 1px solid rgba(186,255,112,.72) !important;
+  outline-offset: 3px;
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .store-fancy-page .store-product-card.no-icon-card {
+    height: 610px !important;
+    min-height: 610px !important;
+    max-height: 610px !important;
+  }
+  .store-fancy-page .store-product-benefits {
+    height: 142px;
+    min-height: 142px;
+    max-height: 142px;
+  }
+}
+
+@media (max-width: 700px) {
+  .store-fancy-page .store-product-card.no-icon-card {
+    height: 410px !important;
+    min-height: 410px !important;
+    max-height: 410px !important;
+  }
+  .store-fancy-page .store-product-benefits {
+    height: 98px;
+    min-height: 98px;
+    max-height: 98px;
+  }
+}
+
+/* V21 — Popup/menu scroll performance. Panels scroll on their own, while the
+   page behind stays locked by the existing modal components. No live blur is
+   sampled during scrolling. */
+.fn-modal-overlay,
+.adm-modal-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
+}
+.adm-modal-overlay {
+  background:
+    radial-gradient(circle at 15% 12%, rgba(113,239,161,.055), transparent 32%),
+    rgba(1,8,5,.94) !important;
+}
+.admin-topbar {
+  background: #04100c !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.fn-modal {
+  max-height: calc(100svh - 32px);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  contain: layout paint style;
+}
+.login-modal-panel,
+.public-mobile-menu,
+.support-chat-body,
+.adm-modal-box {
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
+}
+.adm-modal-box {
+  max-height: calc(100svh - 40px);
+  overflow-y: auto !important;
+  contain: layout paint style;
+}
+.fancy-public-theme .fn-modal {
+  border-color: rgba(134,245,173,.2);
+  color: #eaf7ef;
+  background: linear-gradient(145deg, #091b14, #04100c);
+  box-shadow: none;
+}
+.fancy-public-theme .cart-modal-topbar {
+  background-color: #70edaa !important;
+  background-image: linear-gradient(90deg, #d9ff71, #70edaa) !important;
+}
+.fancy-public-theme .cart-modal-title { color: #f5fff8; }
+.fancy-public-theme .cart-modal-subtitle,
+.fancy-public-theme .cart-summary-for,
+.fancy-public-theme .cart-field-hint { color: #91aa9b; }
+.fancy-public-theme .cart-modal-close {
+  border-color: rgba(134,245,173,.16);
+  color: #d8f7e3;
+  background: #0b2118;
+}
+.fancy-public-theme .cart-summary {
+  border-color: rgba(134,245,173,.14);
+  background: #0a1e16;
+}
+.fancy-public-theme .cart-summary > svg {
+  color: #07140f !important;
+  background: linear-gradient(135deg, #d9ff71, #70edaa);
+}
+.fancy-public-theme .cart-summary-name,
+.fancy-public-theme .cart-field-label { color: #effaf3; }
+.fancy-public-theme .cart-summary-old-price { color: #789184; }
+.fancy-public-theme .cart-summary-price,
+.fancy-public-theme .cart-field-icon { color: #92f7b5; }
+.fancy-public-theme .fn-modal .fn-input {
+  border-color: rgba(134,245,173,.14);
+  color: #effaf3;
+  background: #06140f;
+}
+.fancy-public-theme .fn-modal .fn-input::placeholder { color: #668073; }
+.fancy-public-theme .fn-modal .fn-input:focus {
+  border-color: #70edaa;
+  box-shadow: 0 0 0 3px rgba(112,237,170,.12);
+}
+.fancy-public-theme .cart-info-strip {
+  color: #a4bcad;
+  background: #0b2118;
+}
+.fancy-public-theme .cart-info-icon { color: #92f7b5 !important; }
+.fancy-public-theme .cart-apply-btn,
+.fancy-public-theme .cart-submit-btn {
+  color: #07140f !important;
+  background: linear-gradient(135deg, #d9ff71, #70edaa) !important;
+}
+.fancy-public-theme .cart-apply-btn:hover,
+.fancy-public-theme .cart-submit-btn:hover {
+  background: linear-gradient(135deg, #e3ff91, #87f4b3) !important;
+}
+.fancy-public-theme .fn-modal :focus-visible {
+  outline-color: rgba(217,255,113,.72);
+}
+
+@media (max-width: 560px) {
+  .fn-modal {
+    max-height: calc(100svh - 24px);
+  }
+  .adm-modal-box {
+    max-height: calc(100svh - 20px);
   }
 }

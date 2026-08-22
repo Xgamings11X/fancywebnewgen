@@ -50,14 +50,11 @@ function resolveBadgeColor(value) {
   return BADGE_COLOR_MAP[key] || BADGE_COLOR_MAP.green;
 }
 
-export default function ProductCard({ product = {}, index = 0, isOpen = false, onToggleExpand, onBuy }) {
+export default function ProductCard({ product = {}, index = 0, onBuy }) {
   const price = Math.max(0, Number(product.price) || 0);
   const originalPrice = Math.max(0, Number(product.original_price) || 0);
   const discount = originalPrice > price ? Math.min(99, Math.round((1 - price / originalPrice) * 100)) : 0;
   const features = parseFeatures(product.features);
-  const previewLimit = 4;
-  const visibleFeatures = isOpen ? features : features.slice(0, previewLimit);
-  const hiddenCount = Math.max(0, features.length - previewLimit);
   const presentation = resolvePresentation(product);
   const imageUrl = typeof product.image_url === 'string' && /^https?:\/\//i.test(product.image_url.trim())
     ? product.image_url.trim()
@@ -68,7 +65,7 @@ export default function ProductCard({ product = {}, index = 0, isOpen = false, o
   const productId = product.id ?? `${product.name || 'product'}-${index}`;
 
   return (
-    <article className="store-product-card no-icon-card" data-anim="fade-up" data-delay={String(Math.min(index + 1, 8))}>
+    <article className="store-product-card no-icon-card">
       <div className={`store-product-media ${imageUrl ? 'has-image' : 'text-only'}`}>
         {badge && (
           <div
@@ -127,9 +124,9 @@ export default function ProductCard({ product = {}, index = 0, isOpen = false, o
             <span>{features.length || 'Detail checkout'}</span>
           </div>
 
-          {visibleFeatures.length > 0 ? (
-            <ul>
-              {visibleFeatures.map((feature, featureIndex) => (
+          {features.length > 0 ? (
+            <ul tabIndex={features.length > 4 ? 0 : undefined} aria-label={`Daftar benefit ${product.name || 'produk'}`}>
+              {features.map((feature, featureIndex) => (
                 <li key={`${productId}-${featureIndex}`}>{feature}</li>
               ))}
             </ul>
@@ -137,11 +134,6 @@ export default function ProductCard({ product = {}, index = 0, isOpen = false, o
             <p className="store-product-empty-benefit">Detail lengkap tersedia saat checkout.</p>
           )}
 
-          {features.length > previewLimit && (
-            <button type="button" className="store-product-expand" onClick={() => onToggleExpand?.(productId)} aria-expanded={isOpen}>
-              {isOpen ? 'Tutup benefit' : `Lihat ${hiddenCount} benefit lainnya`}
-            </button>
-          )}
         </div>
       </div>
 

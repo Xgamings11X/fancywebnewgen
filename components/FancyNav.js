@@ -12,7 +12,6 @@ const NAV_LINKS = [
 
 export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const navRef = useRef(null);
   const router = useRouter();
   const s = settings || {};
@@ -24,23 +23,11 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
     : router.pathname === href || router.pathname.startsWith(`${href}/`);
 
   const menuOpenRef = useRef(false);
-  const scrollFrameRef = useRef(0);
-  const scrolledRef = useRef(false);
   menuOpenRef.current = menuOpen;
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
-    const commitScrollState = () => {
-      scrollFrameRef.current = 0;
-      const next = window.scrollY > 18;
-      if (next === scrolledRef.current) return;
-      scrolledRef.current = next;
-      setScrolled(next);
-    };
-    const handleScroll = () => {
-      if (!scrollFrameRef.current) scrollFrameRef.current = window.requestAnimationFrame(commitScrollState);
-    };
     const handleKeyDown = event => {
       if (event.key === 'Escape' && menuOpenRef.current) closeMenu();
     };
@@ -48,9 +35,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
       if (menuOpenRef.current && navRef.current && !navRef.current.contains(event.target)) closeMenu();
     };
 
-    commitScrollState();
     router.events.on('routeChangeStart', closeMenu);
-    window.addEventListener('scroll', handleScroll, { passive: true });
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('pointerdown', handlePointerDown, { passive: true });
 
@@ -72,10 +57,8 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
 
     return () => {
       router.events.off('routeChangeStart', closeMenu);
-      window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('pointerdown', handlePointerDown);
-      if (scrollFrameRef.current) window.cancelAnimationFrame(scrollFrameRef.current);
       if (idleId != null) window.cancelIdleCallback?.(idleId);
       if (timerId != null) window.clearTimeout(timerId);
     };
@@ -89,7 +72,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
   }, [menuOpen]);
 
   return (
-    <nav ref={navRef} className={`public-nav${scrolled ? ' is-scrolled' : ''}`} aria-label="Navigasi utama">
+    <nav ref={navRef} className="public-nav" aria-label="Navigasi utama">
       <Link href="/" prefetch className="public-nav-brand" aria-label={`${serverName} — Beranda`}>
         <span className="public-nav-logo">
           {logoUrl ? <img src={logoUrl} alt="" width={64} height={64} decoding="async" fetchPriority="high" /> : <LogoImage alt="" width={64} height={64} fetchPriority="high" />}

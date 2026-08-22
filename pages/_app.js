@@ -76,7 +76,7 @@ export default function App({ Component, pageProps }) {
     };
   }, [pageProps?.settings]);
 
-  // ── One-time setup: page-transition overlay, scroll progress bar, scroll-reveal observer ──
+  // ── One-time setup: page-transition overlay, route progress bar, scroll-reveal observer ──
   // Dependency array kosong = dibuat sekali untuk seluruh app, BUKAN per render/per route.
   useEffect(() => {
     const bar = document.createElement('div');
@@ -90,36 +90,15 @@ export default function App({ Component, pageProps }) {
     overlay.setAttribute('aria-hidden', 'true');
     document.body.appendChild(overlay);
 
-    let scrollFrame = 0;
-    let rangeFrame = 0;
     let routePending = false;
     let routeResetTimer = 0;
     let overlayResetTimer = 0;
     let routeDoneTimer = 0;
     let routeStartedAt = 0;
-    let maxScroll = 0;
-    let lastScale = -1;
-
-    const updateScrollBar = () => {
-      scrollFrame = 0;
-      if (routePending) return;
-      const pct = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
-      if (Math.abs(pct - lastScale) < 0.0015) return;
-      lastScale = pct;
-      bar.style.transform = `scaleX(${pct})`;
-    };
-    const refreshScrollRange = () => {
-      rangeFrame = 0;
-      maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-      updateScrollBar();
-    };
-    const scheduleRangeRefresh = () => {
-      if (!rangeFrame) rangeFrame = window.requestAnimationFrame(refreshScrollRange);
-    };
-    const onScroll = () => {
-      if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateScrollBar);
-    };
-    const onRouteStart = () => {
+    const onRouteStart = (_url, { shallow } = {}) => {
+      // Query-only updates (for example Store category filters) keep the current
+      // page mounted, so they must feel like an instant UI state change.
+      if (shallow) return;
       routePending = true;
       routeStartedAt = window.performance.now();
       window.clearTimeout(routeResetTimer);
@@ -143,11 +122,11 @@ export default function App({ Component, pageProps }) {
       routeResetTimer = window.setTimeout(() => {
         routePending = false;
         bar.classList.remove('is-routing');
-        lastScale = -1;
-        scheduleRangeRefresh();
+        bar.style.transform = 'scaleX(0)';
       }, 110);
     };
     const onRouteDone = () => {
+      if (!routePending) return;
       // Keep the wipe visible long enough to read as one intentional motion.
       // Without this floor, a prefetched route could complete within a frame and
       // the overlay would flash or disappear before its entrance was painted.
@@ -157,34 +136,21 @@ export default function App({ Component, pageProps }) {
       routeDoneTimer = window.setTimeout(finishRoute, remaining);
     };
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', scheduleRangeRefresh, { passive: true });
     Router.events.on('routeChangeStart', onRouteStart);
     Router.events.on('routeChangeComplete', onRouteDone);
     Router.events.on('routeChangeError', onRouteDone);
-    const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(scheduleRangeRefresh)
-      : null;
-    resizeObserver?.observe(document.documentElement);
-    refreshScrollRange();
-
     const cleanupObserver = createScrollRevealObserver();
 
     // First paint hero entrance (tidak ada routeChangeComplete saat initial load)
     const initialTimer = setTimeout(() => document.body.classList.add('page-loaded'), 80);
 
     return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', scheduleRangeRefresh);
       Router.events.off('routeChangeStart', onRouteStart);
       Router.events.off('routeChangeComplete', onRouteDone);
       Router.events.off('routeChangeError', onRouteDone);
-      if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
-      if (rangeFrame) window.cancelAnimationFrame(rangeFrame);
       window.clearTimeout(routeResetTimer);
       window.clearTimeout(overlayResetTimer);
       window.clearTimeout(routeDoneTimer);
-      resizeObserver?.disconnect();
       cleanupObserver();
       clearTimeout(initialTimer);
       bar.remove();

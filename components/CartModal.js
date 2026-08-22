@@ -147,7 +147,7 @@ export default function CartModal({ product, player, onClose }) {
 
   return (
     <div className="fn-modal-overlay" role="presentation" onClick={e => { if (e.target === e.currentTarget && !loading) onClose(); }}>
-      <div ref={dialogRef} className="fn-modal animate-in" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+      <div ref={dialogRef} className="fn-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
 
         {/* Top accent bar */}
         <div className="cart-modal-topbar"/>

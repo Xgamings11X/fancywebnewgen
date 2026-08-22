@@ -88,7 +88,6 @@ export default function StorePage({ settings, categories: initialCategories, pro
   const [cartItem, setCartItem] = useState(null);
   const [pendingBuy, setPendingBuy] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
-  const [expanded, setExpanded] = useState({});
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState(initialProducts || []);
   const [categories, setCategories] = useState(initialCategories || []);
@@ -260,7 +259,6 @@ export default function StorePage({ settings, categories: initialCategories, pro
 
   const selectCategory = id => {
     setActiveTab(id);
-    setExpanded({});
     const nextQuery = { ...router.query };
     delete nextQuery.order;
     delete nextQuery.order_id;
@@ -371,8 +369,6 @@ export default function StorePage({ settings, categories: initialCategories, pro
                       key={productId}
                       product={product}
                       index={index}
-                      isOpen={Boolean(expanded[productId])}
-                      onToggleExpand={id => setExpanded(current => ({ ...current, [id]: !current[id] }))}
                       onBuy={handleBuy}
                     />
                   );

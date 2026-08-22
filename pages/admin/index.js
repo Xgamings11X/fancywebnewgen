@@ -42,7 +42,7 @@ const TICKET_TYPES = {
 };
 
 const CATEGORY_COLOR_MAP = {
-  orange:'var(--primary)', red:'#e74c3c', purple:'#9b59b6',
+  orange:'var(--adm-mint)', red:'#e74c3c', purple:'#9b59b6',
   blue:'#3498db', green:'#2ecc71', yellow:'#f1c40f',
 };
 
