@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" fill="none">
+  <defs>
+    <linearGradient id="horizon" x1="960" y1="330" x2="960" y2="1030" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#86F5AD" stop-opacity="0"/>
+      <stop offset="0.58" stop-color="#45D184" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#061711" stop-opacity="0.28"/>
+    </linearGradient>
+    <linearGradient id="cyanLine" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#65D5FF" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#86F5AD" stop-opacity="0.06"/>
+    </linearGradient>
+    <pattern id="pixelGrid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0V64" stroke="#86F5AD" stroke-opacity="0.055"/>
+    </pattern>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#pixelGrid)" opacity="0.5"/>
+  <path d="M0 770 128 706l128 64 160-80 160 80 144-72 144 72 176-88 176 88 150-75 150 75 160-80 242 121v249H0V770Z" fill="url(#horizon)"/>
+  <path d="M0 838 128 774l128 64 160-80 160 80 144-72 144 72 176-88 176 88 150-75 150 75 160-80 242 121" stroke="#86F5AD" stroke-opacity="0.11"/>
+
+  <!-- Floating grass blocks -->
+  <g transform="translate(92 202)" opacity="0.42">
+    <path d="m0 42 68-34 68 34-68 34L0 42Z" fill="#86F5AD" fill-opacity="0.34" stroke="#B9FF78" stroke-opacity="0.34"/>
+    <path d="m0 42 68 34v74L0 116V42Z" fill="#123E2A" fill-opacity="0.62" stroke="#86F5AD" stroke-opacity="0.17"/>
+    <path d="m136 42-68 34v74l68-34V42Z" fill="#092B20" fill-opacity="0.72" stroke="#65D5FF" stroke-opacity="0.14"/>
+    <path d="m22 62 18 9v20l-18-9V62Zm58 23 20-10v22l-20 10V85Zm-33 28 15 8v17l-15-8v-17Z" fill="#65D5FF" fill-opacity="0.17"/>
+  </g>
+  <g transform="translate(1642 286) scale(.72)" opacity="0.4">
+    <path d="m0 42 68-34 68 34-68 34L0 42Z" fill="#D9FF71" fill-opacity="0.28" stroke="#D9FF71" stroke-opacity="0.3"/>
+    <path d="m0 42 68 34v74L0 116V42Z" fill="#17432F" fill-opacity="0.62" stroke="#86F5AD" stroke-opacity="0.16"/>
+    <path d="m136 42-68 34v74l68-34V42Z" fill="#0B2D21" fill-opacity="0.72" stroke="#65D5FF" stroke-opacity="0.13"/>
+  </g>
+  <g transform="translate(1420 690) scale(1.18)" opacity="0.34">
+    <path d="m0 42 68-34 68 34-68 34L0 42Z" fill="#65D5FF" fill-opacity="0.26" stroke="#65D5FF" stroke-opacity="0.3"/>
+    <path d="m0 42 68 34v74L0 116V42Z" fill="#10382A" fill-opacity="0.58" stroke="#86F5AD" stroke-opacity="0.15"/>
+    <path d="m136 42-68 34v74l68-34V42Z" fill="#08271D" fill-opacity="0.7" stroke="#65D5FF" stroke-opacity="0.16"/>
+    <path d="m21 66 16 8v18l-16-8V66Zm47 24 14 7v17l-14-7V90Zm35-23 15-8v18l-15 8V67Z" fill="#65D5FF" fill-opacity="0.3"/>
+  </g>
+
+  <!-- Low-poly block terrain silhouettes -->
+  <g opacity="0.32">
+    <path d="M0 880 178 791l178 89-178 89L0 880Z" fill="#6EE69B" fill-opacity="0.2"/>
+    <path d="M0 880 178 969v111H0V880Z" fill="#103527" fill-opacity="0.54"/>
+    <path d="m356 880-178 89v111h178V880Z" fill="#09281E" fill-opacity="0.68"/>
+    <path d="m222 783 112-56 112 56-112 56-112-56Z" fill="#86F5AD" fill-opacity="0.16"/>
+    <path d="m222 783 112 56v92l-112-56v-92Z" fill="#123B2B" fill-opacity="0.5"/>
+    <path d="m446 783-112 56v92l112-56v-92Z" fill="#08271D" fill-opacity="0.62"/>
+  </g>
+  <g transform="translate(1510 28)" opacity="0.23">
+    <path d="m0 880 205-102 205 102-205 103L0 880Z" fill="#65D5FF" fill-opacity="0.2"/>
+    <path d="m0 880 205 103v97H0V880Z" fill="#10372A" fill-opacity="0.52"/>
+    <path d="m410 880-205 103v97h205V880Z" fill="#08271E" fill-opacity="0.68"/>
+  </g>
+
+  <!-- Pixel sword and pickaxe silhouettes -->
+  <g transform="translate(1495 122) rotate(11 92 152)" fill="url(#cyanLine)" opacity="0.42">
+    <path d="M82 0h38v176h38v38h-38v38H82v-38H44v-38h38V0Z"/>
+    <path d="M82 238h38v86H82z"/>
+  </g>
+  <g transform="translate(238 604) rotate(-14 116 110)" fill="#86F5AD" opacity="0.12">
+    <path d="M0 32h190v34h-78v44H78V66H0V32Z"/>
+    <path d="M78 96h34v168H78z"/>
+  </g>
+
+  <!-- Ore pixels and guide lines -->
+  <g fill="#65D5FF">
+    <rect x="368" y="172" width="10" height="10" rx="2" opacity="0.28" transform="rotate(45 373 177)"/>
+    <rect x="676" y="318" width="8" height="8" rx="2" opacity="0.2" transform="rotate(45 680 322)"/>
+    <rect x="1184" y="188" width="12" height="12" rx="2" opacity="0.24" transform="rotate(45 1190 194)"/>
+    <rect x="1742" y="602" width="9" height="9" rx="2" opacity="0.26" transform="rotate(45 1746 606)"/>
+  </g>
+  <g fill="#D9FF71">
+    <rect x="526" y="102" width="9" height="9" rx="2" opacity="0.25" transform="rotate(45 530 106)"/>
+    <rect x="1318" y="412" width="8" height="8" rx="2" opacity="0.2" transform="rotate(45 1322 416)"/>
+    <rect x="1542" y="156" width="11" height="11" rx="2" opacity="0.24" transform="rotate(45 1547 161)"/>
+  </g>
+  <path d="M250 520h270m920 78h260M676 914h490" stroke="#86F5AD" stroke-opacity="0.08" stroke-dasharray="4 14"/>
+</svg>

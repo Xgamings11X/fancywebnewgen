@@ -2318,6 +2318,8 @@ html:has(.fancy-public-theme) {
 }
 
 .fancy-public-theme .public-nav {
+  left: 0;
+  right: auto;
   background: linear-gradient(180deg, rgba(7,20,15,.975), rgba(3,12,8,.985)) !important;
   /* Paint containment clipped the fixed mobile dropdown to the nav's height. */
   contain: none;
@@ -3074,4 +3076,229 @@ html:has(.fancy-public-theme) {
   .leaderboard-empty::after { width: 310px; height: 310px; }
   .leaderboard-empty-visual { width: 70px; height: 70px; }
   .leaderboard-empty-note { max-width: 230px; }
+}
+
+/* ================================================================
+   V24 — Minecraft world canvas + reference-grade leaderboard
+   Static SVG and gradients add identity without live blur, parallax, or
+   continuously animated particles, keeping long-page scrolling inexpensive.
+   ================================================================ */
+.public-shell.fancy-public-theme {
+  background:
+    radial-gradient(ellipse at 9% 7%, rgba(72,211,137,.16), transparent 33%),
+    radial-gradient(ellipse at 93% 16%, rgba(101,213,255,.12), transparent 32%),
+    radial-gradient(ellipse at 52% 58%, rgba(134,245,173,.065), transparent 41%),
+    linear-gradient(180deg, #071a13 0%, #04120d 43%, #061811 100%) !important;
+}
+.public-shell.fancy-public-theme::before {
+  opacity: .72;
+  background-image:
+    linear-gradient(rgba(134,245,173,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,213,255,.026) 1px, transparent 1px),
+    repeating-linear-gradient(135deg, transparent 0 181px, rgba(134,245,173,.017) 181px 182px, transparent 182px 362px);
+  background-size: 64px 64px, 64px 64px, 100% 100%;
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.94) 82%, transparent 100%);
+}
+.public-shell.fancy-public-theme::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 82px 0 0;
+  pointer-events: none;
+  contain: paint;
+  background-image: url('/fancy-minecraft-world.svg');
+  background-position: center top;
+  background-repeat: repeat-y;
+  background-size: max(1440px, 100vw) auto;
+  opacity: .62;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.92), #000 78%, transparent 100%);
+}
+.public-shell.fancy-public-theme > :not(.public-nav) { position: relative; z-index: 1; }
+
+/* The Home already owns a crest element. Keep it crisp and intentional rather
+   than returning to the old large blur that was expensive during scrolling. */
+.home-page .fn-fancy-backdrop-logo {
+  right: 2%;
+  top: 48%;
+  width: min(35vw, 560px);
+  opacity: .09;
+  transform: translateY(-50%) rotate(-4deg);
+  filter: none !important;
+}
+.home-page .fn-fancy-backdrop-logo::after {
+  inset: -12%;
+  border: 1px solid rgba(134,245,173,.13);
+  background: radial-gradient(circle, rgba(134,245,173,.07), transparent 68%);
+  filter: none !important;
+}
+
+/* A shared crest watermark ties the other public pages to the Home identity. */
+.leaderboard-hero,
+.store-page .store-page-hero,
+.invoice-wrap { isolation: isolate; }
+.leaderboard-hero::after,
+.store-page .store-page-hero::before,
+.invoice-wrap::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: clamp(300px, 29vw, 560px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  contain: paint;
+  background: url('/fancy-network-logo.webp') center / contain no-repeat;
+  opacity: .065;
+}
+.leaderboard-hero::after { top: 51%; right: 4%; transform: translateY(-50%) rotate(-5deg); }
+.store-page .store-page-hero::before { top: 48%; left: 59%; transform: translate(-50%,-50%) rotate(4deg); }
+.invoice-wrap::before { top: 150px; right: -18%; transform: rotate(5deg); }
+
+/* Leaderboard follows the supplied reference: a strong three-player podium,
+   then a compact ranked list. Brand lime/cyan replace the reference orange. */
+.leaderboard-board {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(134,245,173,.075), transparent 35%),
+    linear-gradient(160deg, rgba(7,31,21,.95), rgba(3,18,12,.98));
+}
+.leaderboard-board::before {
+  content: '';
+  position: absolute;
+  inset: 88px 6% auto;
+  height: 420px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(101,213,255,.055), transparent 68%);
+}
+.leaderboard-board > header,
+.leaderboard-podium,
+.leaderboard-list,
+.leaderboard-empty { position: relative; z-index: 1; }
+.leaderboard-period {
+  display: flex;
+  min-width: 142px;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+  padding: 9px 12px;
+  border: 1px solid rgba(134,245,173,.12);
+  border-radius: 11px;
+  color: #86f5ad;
+  background: rgba(134,245,173,.045);
+}
+.leaderboard-period > span { display: grid; gap: 3px; }
+.leaderboard-period small { color: #607f6e !important; font-size: 7px !important; font-weight: 850; letter-spacing: .13em; }
+.leaderboard-period strong { color: #d9eee1; font-size: 10px; line-height: 1; white-space: nowrap; }
+.leaderboard-board-summary { margin-left: 0; }
+
+.leaderboard-podium {
+  position: relative;
+  width: min(100%, 1000px);
+  min-height: 430px;
+  margin: 0 auto;
+  gap: clamp(18px, 3vw, 38px);
+  padding: 48px 14px 36px;
+}
+.leaderboard-podium::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: 26px;
+  height: 68px;
+  border: 1px solid rgba(134,245,173,.075);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(134,245,173,.09), transparent 68%);
+  transform: perspective(260px) rotateX(64deg);
+}
+.leaderboard-place {
+  margin-bottom: 8px;
+  padding: 7px 11px;
+  color: #082116;
+  background: #dbe8e0;
+  font-size: 8px;
+  letter-spacing: .02em;
+}
+.leaderboard-podium-card.place-1 .leaderboard-place { background: #d9ff71; box-shadow: 0 8px 24px rgba(217,255,113,.12); }
+.leaderboard-podium-card.place-3 .leaderboard-place { color: #062018; background: #65d5ff; }
+.leaderboard-podium-card > img { height: 176px; filter: drop-shadow(0 18px 14px rgba(0,0,0,.44)); }
+.leaderboard-podium-card.place-1 > img { height: 232px; }
+.leaderboard-podium-card > div {
+  max-width: 285px;
+  min-height: 98px;
+  margin-top: -7px;
+  padding: 25px 12px 14px;
+  border-radius: 19px;
+  background: linear-gradient(180deg, rgba(8,32,22,.92), rgba(4,18,13,.98));
+  box-shadow: 0 18px 38px rgba(0,0,0,.2);
+}
+.leaderboard-podium-card.place-1 > div {
+  min-height: 122px;
+  border-color: rgba(217,255,113,.42);
+  background: linear-gradient(180deg, rgba(79,107,35,.26), rgba(4,20,14,.98));
+  box-shadow: 0 22px 48px rgba(0,0,0,.24), 0 0 34px rgba(217,255,113,.055);
+}
+.leaderboard-podium-card strong { font-size: 12px; }
+.leaderboard-podium-card small { font-size: 10px; }
+
+.leaderboard-list {
+  width: min(100%, 980px);
+  margin: 2px auto 0;
+  gap: 10px;
+}
+.leaderboard-list-row {
+  min-height: 74px;
+  grid-template-columns: 34px 44px minmax(0, 1fr) auto;
+  gap: 13px;
+  padding: 11px 16px;
+  border-color: rgba(134,245,173,.105);
+  border-radius: 17px;
+  background: rgba(2,15,10,.64);
+}
+.leaderboard-list-row > b { width: 31px; height: 31px; border-radius: 10px; font-size: 11px; }
+.leaderboard-list-row .fn-player-avatar { width: 44px !important; height: 44px !important; border-radius: 11px; }
+.leaderboard-list-row strong { font-size: 13px; }
+.leaderboard-list-row small { font-size: 9px; }
+.leaderboard-list-row > span { font-size: 12px; }
+
+@media (min-width: 2400px) {
+  .leaderboard-podium { width: min(100%, 1260px); min-height: 520px; }
+  .leaderboard-podium-card > img { height: 220px; }
+  .leaderboard-podium-card.place-1 > img { height: 290px; }
+  .leaderboard-podium-card > div { max-width: 350px; min-height: 118px; }
+  .leaderboard-podium-card.place-1 > div { min-height: 144px; }
+  .leaderboard-list { width: min(100%, 1200px); }
+  .leaderboard-list-row { min-height: 86px; padding-inline: 20px; }
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .public-shell.fancy-public-theme::after {
+    background-size: max(1080px, 160vw) auto;
+    opacity: .4;
+  }
+  .leaderboard-hero::after,
+  .store-page .store-page-hero::before,
+  .invoice-wrap::before { opacity: .04; }
+}
+
+@media (max-width: 640px) {
+  .home-page .fn-fancy-backdrop-logo { right: -16%; width: min(92vw, 440px); opacity: .055; }
+  .leaderboard-period { display: none; }
+  .leaderboard-board::before { inset-inline: -20%; }
+  .leaderboard-podium { min-height: 292px; gap: 5px; padding: 30px 0 22px; }
+  .leaderboard-podium::after { left: 2%; right: 2%; bottom: 17px; }
+  .leaderboard-place { padding: 5px 7px; font-size: 6px; }
+  .leaderboard-podium-card > img { height: 91px; }
+  .leaderboard-podium-card.place-1 > img { height: 122px; }
+  .leaderboard-podium-card > div { min-height: 70px; padding: 18px 5px 9px; border-radius: 12px; }
+  .leaderboard-podium-card.place-1 > div { min-height: 82px; }
+  .leaderboard-podium-card strong { font-size: 8px; }
+  .leaderboard-podium-card small { font-size: 8px; }
+  .leaderboard-list { gap: 7px; }
+  .leaderboard-list-row { min-height: 66px; grid-template-columns: 27px 38px minmax(0,1fr); gap: 8px; padding: 9px 10px; border-radius: 13px; }
+  .leaderboard-list-row .fn-player-avatar { width: 38px !important; height: 38px !important; }
+  .leaderboard-list-row strong { font-size: 10px; }
+  .leaderboard-list-row > span { grid-column: 3; justify-self: start; font-size: 9px; }
 }

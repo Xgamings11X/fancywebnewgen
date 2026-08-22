@@ -47,12 +47,13 @@ function Podium({ entries, type }) {
   );
 }
 
-function RankingBoard({ title, eyebrow, type, entries, emptyText }) {
+function RankingBoard({ title, eyebrow, type, entries, emptyText, periodLabel }) {
   return (
     <section className="leaderboard-board" data-kind={type}>
       <header>
         <span className="leaderboard-board-icon"><Icon name={type === 'voter' ? 'star' : 'cart-shopping'} size={20}/></span>
         <div className="leaderboard-board-title"><small>{eyebrow}</small><h2>{title}</h2></div>
+        <span className="leaderboard-period"><Icon name="clock" size={14}/><span><small>PERIODE</small><strong>{periodLabel}</strong></span></span>
         <span className="leaderboard-board-summary"><strong>{entries.length}</strong><small>PERINGKAT</small></span>
       </header>
       {entries.length ? (
@@ -120,6 +121,7 @@ export default function LeaderboardPage({ settings = {} }) {
       title: 'Top Voter',
       icon: 'star',
       description: 'Player dengan vote MinecraftMP terbanyak.',
+      periodLabel: 'Bulan berjalan',
       entries: data.voters || [],
       emptyText: data.voterConfigured ? (data.voterError || 'Belum ada vote pada periode ini.') : 'Isi LEADERBOARD_ENDPOINT untuk menampilkan data voter.',
     },
@@ -128,6 +130,7 @@ export default function LeaderboardPage({ settings = {} }) {
       title: 'Top Donatur',
       icon: 'cart-shopping',
       description: 'Player dengan total pembelian produk tertinggi.',
+      periodLabel: 'Sepanjang waktu',
       entries: data.donors || [],
       emptyText: 'Belum ada transaksi produk yang berhasil.',
     },
@@ -201,6 +204,7 @@ export default function LeaderboardPage({ settings = {} }) {
                   title={selectedBoard.title}
                   entries={selectedBoard.entries}
                   emptyText={selectedBoard.emptyText}
+                  periodLabel={selectedBoard.periodLabel}
                 />
               </div>
             </div>
