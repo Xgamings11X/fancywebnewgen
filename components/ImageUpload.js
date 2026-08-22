@@ -140,7 +140,7 @@ export default function ImageUpload({
     display:    'flex',
     alignItems: 'center',
     gap:        14,
-    background: drag ? 'rgba(255,107,0,0.08)' : 'rgba(255,255,255,0.02)',
+    background: drag ? 'rgba(113,239,161,0.08)' : 'rgba(255,255,255,0.02)',
     cursor:     loading ? 'default' : 'pointer',
     transition: 'border-color 0.15s, background 0.15s',
     userSelect: 'none',
@@ -157,8 +157,8 @@ export default function ImageUpload({
     minWidth: previewSize,
     objectFit:'contain',
     borderRadius: 8,
-    border:   '1px solid rgba(255,107,0,0.2)',
-    background:'#16161e',
+    border:   '1px solid rgba(113,239,161,0.2)',
+    background:'#071711',
     ...childStyle,
   };
 
@@ -168,7 +168,7 @@ export default function ImageUpload({
     minWidth: previewSize,
     borderRadius: 8,
     border:   '1px solid rgba(255,255,255,0.08)',
-    background:'#16161e',
+    background:'#071711',
     display:  'flex',
     alignItems:'center',
     justifyContent:'center',
@@ -201,7 +201,7 @@ export default function ImageUpload({
           <img src={value} alt="preview" style={previewStyle} onError={e=>{e.target.style.opacity=0.3;}}/>
         ) : (
           <div style={placeholderStyle}>
-            <Icon name="image" size={22} color="rgba(255,107,0,0.35)"/>
+            <Icon name="image" size={22} color="rgba(113,239,161,0.45)"/>
             <span style={{fontSize:10}}>No image</span>
           </div>
         )}

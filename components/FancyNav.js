@@ -114,7 +114,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
             </button>
           </div>
         ) : (
-          <button type="button" onClick={onLoginClick} className="public-nav-login">
+          <button type="button" onClick={onLoginClick} className="public-nav-login" aria-label="Masuk ke akun pemain">
             <Icon name="right-to-bracket" size={15} />
             <span>Login</span>
           </button>

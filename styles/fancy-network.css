@@ -2526,6 +2526,94 @@ html:has(.fancy-public-theme) {
   .leaderboard-list-row > span { grid-column: 3; justify-self: start; font-size: 9px; }
 }
 
+/* ================================================================
+   V25 — one continuous public canvas + honest empty leaderboard
+   Every public route now inherits exactly the same page background. Home's
+   legacy ambient layers no longer stop at the hero boundary and form a box.
+   ================================================================ */
+.public-shell.fancy-public-theme {
+  --fn-public-canvas:
+    radial-gradient(ellipse at 9% 7%, rgba(72,211,137,.16), transparent 33%),
+    radial-gradient(ellipse at 93% 16%, rgba(101,213,255,.12), transparent 32%),
+    radial-gradient(ellipse at 52% 58%, rgba(134,245,173,.065), transparent 41%),
+    linear-gradient(180deg, #071a13 0%, #04120d 43%, #061811 100%);
+  background-color: #06150f !important;
+  background-image: var(--fn-public-canvas) !important;
+  background-attachment: scroll !important;
+}
+.public-shell.fancy-public-theme::before {
+  opacity: .52;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+.public-shell.fancy-public-theme::after {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+.public-shell.fancy-public-theme > main,
+.home-page .landing-page,
+.store-page .store-redesign,
+.leaderboard-page > main,
+.invoice-page .invoice-wrap {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* These Home-only layers used to paint a darker rectangle exactly as wide as
+   the hero. The global SVG/grid remains visible and supplies the decoration. */
+.home-page .fn-home-hero-v9,
+.home-page .fn-home-ambient,
+.home-page .fn-fancy-backdrop {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.home-page .fn-home-ambient { display: none; }
+.home-page .fn-fancy-backdrop {
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+  border-radius: 0;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+.leaderboard-hero::before { display: none; }
+
+.leaderboard-placeholder-note {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(100%, 980px);
+  align-items: flex-start;
+  gap: 10px;
+  margin: 22px auto 0;
+  padding: 11px 13px;
+  border: 1px dashed rgba(217,255,113,.22);
+  border-radius: 13px;
+  color: #d9ff71;
+  background: rgba(217,255,113,.045);
+}
+.leaderboard-placeholder-note > svg { flex: 0 0 auto; margin-top: 1px; }
+.leaderboard-placeholder-note > span { display: grid; gap: 3px; }
+.leaderboard-placeholder-note strong { color: #eaffb3; font-size: 10px; }
+.leaderboard-placeholder-note small { color: #7e9b89; font-size: 8px; line-height: 1.55; }
+.leaderboard-list-row.is-placeholder { border-style: dashed; }
+.leaderboard-list-row.is-placeholder > div strong { color: #b8cec0; }
+.leaderboard-list-row.is-placeholder > span { color: #708a7b; }
+.leaderboard-podium-card > img { image-rendering: pixelated; }
+
+@media (min-width: 2400px) {
+  .leaderboard-placeholder-note { width: min(100%, 1200px); padding: 14px 16px; }
+  .leaderboard-placeholder-note strong { font-size: 13px; }
+  .leaderboard-placeholder-note small { font-size: 10px; }
+}
+
+@media (max-width: 640px) {
+  .home-page .fn-fancy-backdrop { left: -7px; right: -7px; }
+  .leaderboard-placeholder-note { margin-top: 15px; padding: 10px; }
+  .leaderboard-placeholder-note strong { font-size: 9px; }
+  .leaderboard-placeholder-note small { font-size: 7px; }
+}
+
 .adm-leaderboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .adm-leaderboard-board { padding: 18px; }
 .adm-leaderboard-board > h3 { margin: 0 0 15px; color: #effff5; font: 700 16px/1.2 'Space Grotesk', sans-serif; }
@@ -3301,4 +3389,88 @@ html:has(.fancy-public-theme) {
   .leaderboard-list-row .fn-player-avatar { width: 38px !important; height: 38px !important; }
   .leaderboard-list-row strong { font-size: 10px; }
   .leaderboard-list-row > span { grid-column: 3; justify-self: start; font-size: 9px; }
+}
+
+/* ================================================================
+   V26 — final shared canvas + mobile critical-render budget
+   Route wrappers stay transparent so the world grid never becomes a
+   different-coloured rectangle. Off-screen sections are skipped until near
+   the viewport and coarse-pointer controls keep a reliable touch target.
+   ================================================================ */
+.public-shell.fancy-public-theme {
+  background-color: #06150f !important;
+  background-image: var(--fn-public-canvas) !important;
+  background-attachment: scroll !important;
+}
+.public-shell.fancy-public-theme::before {
+  inset: 0;
+  opacity: .52;
+  background-image:
+    linear-gradient(rgba(134,245,173,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,213,255,.026) 1px, transparent 1px),
+    repeating-linear-gradient(124deg, transparent 0 126px, rgba(134,245,173,.015) 126px 127px, transparent 127px 252px);
+  background-size: 64px 64px, 64px 64px, 100% 100%;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+.public-shell.fancy-public-theme::after {
+  opacity: .42;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+.public-shell.fancy-public-theme > main,
+.home-page .landing-page,
+.home-page .fn-home-hero-v9,
+.home-page .fn-fancy-backdrop,
+.store-page .store-redesign,
+.store-page .store-page-hero,
+.leaderboard-page > main,
+.leaderboard-page .leaderboard-hero,
+.invoice-page .invoice-wrap {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+@media (max-width: 720px) {
+  .public-shell.fancy-public-theme::before { opacity: .34; }
+  .public-shell.fancy-public-theme::after {
+    opacity: .28;
+    background-size: 1080px auto;
+  }
+
+  .home-page .landing-features,
+  .home-page .landing-famous-program,
+  .store-page .store-catalog-section,
+  .leaderboard-page .leaderboard-wrap,
+  .fancy-public-theme .public-footer {
+    content-visibility: auto;
+  }
+  .home-page .landing-features { contain-intrinsic-size: auto 760px; }
+  .home-page .landing-famous-program { contain-intrinsic-size: auto 620px; }
+  .store-page .store-catalog-section { contain-intrinsic-size: auto 1000px; }
+  .leaderboard-page .leaderboard-wrap { contain-intrinsic-size: auto 1040px; }
+  .fancy-public-theme .public-footer { contain-intrinsic-size: auto 520px; }
+
+  .leaderboard-podium-card > img { filter: none; }
+  .fancy-public-theme .public-nav-login,
+  .fancy-public-theme .public-nav-menu-button,
+  .fancy-public-theme .public-nav-icon-button,
+  .fancy-public-theme .public-footer-socials a,
+  .leaderboard-category-tabs > button,
+  .leaderboard-actions > button,
+  .leaderboard-actions > a {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-shell.fancy-public-theme *,
+  .public-shell.fancy-public-theme *::before,
+  .public-shell.fancy-public-theme *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
