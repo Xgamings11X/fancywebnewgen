@@ -180,9 +180,10 @@ export default function HomePage({ settings }) {
   }, []);
 
   const socials = useMemo(() => [
-    { href:safeExternalUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL), icon:'star', label:'Vote', cls:'is-vote' },
+    { href:safeExternalUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL), icon:'star', label:'Vote MinecraftMP', cls:'is-vote' },
     { href:safeExternalUrl(s.discord_url || process.env.NEXT_PUBLIC_DISCORD_URL), icon:'discord', label:'Discord', cls:'is-discord' },
     { href:safeExternalUrl(s.whatsapp_url || process.env.NEXT_PUBLIC_WHATSAPP_URL), icon:'whatsapp', label:'WhatsApp', cls:'is-whatsapp' },
+    { href:safeExternalUrl(s.instagram_url || process.env.NEXT_PUBLIC_INSTAGRAM_URL), icon:'instagram', label:'Instagram', cls:'is-instagram' },
     { href:safeExternalUrl(s.tiktok_url || process.env.NEXT_PUBLIC_TIKTOK_URL), icon:'tiktok', label:'TikTok', cls:'is-tiktok' },
     { href:safeExternalUrl(s.youtube_url || process.env.NEXT_PUBLIC_YOUTUBE_URL), icon:'youtube', label:'YouTube', cls:'is-youtube' },
   ].filter(item => item.href), [s]);
@@ -318,9 +319,9 @@ export default function HomePage({ settings }) {
               <span><small>MARKETPLACE</small><strong>Rank, kit & utility</strong></span>
               <Icon name="arrow-right" size={15}/>
             </Link>
-            <Link href="/support" className="fn-dock-item">
-              <span className="fn-dock-icon"><Icon name="comment-dots" size={18}/></span>
-              <span><small>SUPPORT CENTER</small><strong>Bantuan & ticket</strong></span>
+            <Link href="/leaderboard" className="fn-dock-item">
+              <span className="fn-dock-icon"><Icon name="trophy" size={18}/></span>
+              <span><small>COMMUNITY RANKING</small><strong>Top voter & donatur</strong></span>
               <Icon name="arrow-right" size={15}/>
             </Link>
             {socials.find(item => item.label === 'Discord') ? (
@@ -336,6 +337,19 @@ export default function HomePage({ settings }) {
               </div>
             )}
           </div>
+
+          {socials.length > 0 && (
+            <div className="landing-socials anim-hero-up anim-d4">
+              <span>Temukan Fancy Network</span>
+              <div>
+                {socials.map(item => (
+                  <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className={`landing-social-link ${item.cls}`}>
+                    <Icon name={item.icon} size={15}/>{item.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </header>
 
         <section className="landing-section landing-features">
@@ -372,12 +386,8 @@ export default function HomePage({ settings }) {
                 <a href={famousApplyUrl} target="_blank" rel="noopener noreferrer" className="landing-primary-action">
                   Daftar Rank Famous <Icon name="arrow-right" size={16}/>
                 </a>
-              ) : (
-                <Link href="/support" className="landing-primary-action">
-                  Tanyakan ke Support <Icon name="arrow-right" size={16}/>
-                </Link>
-              )}
-              <Link href="/support" className="landing-text-link">Lihat persyaratan</Link>
+              ) : null}
+              {famousApplyUrl && <a href={famousApplyUrl} target="_blank" rel="noopener noreferrer" className="landing-text-link">Lihat persyaratan</a>}
             </div>
           </div>
 

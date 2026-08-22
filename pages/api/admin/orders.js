@@ -51,6 +51,8 @@ export default async function handler(req, res) {
         const r = await notifyTransaction({
           transaction_id: order.order_id,
           player_name:    order.player_username || '',
+          player_uuid:    order.player_uuid || null,
+          player_platform: order.player_platform || 'java',
           product_id:     order.reward_trigger || String(order.product_id),
           amount:         order.amount,
           status:         'success',

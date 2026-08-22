@@ -1,28 +1,20 @@
 /**
  * pages/api/orders/create-core.js
  *
- * Endpoint untuk Direct Checkout via Midtrans Core API (non-popup, non-Snap).
- * Dipanggil oleh components/CartModal.js setelah user memilih salah satu kartu
- * di components/PaymentMethodSelector.js (UI custom) lalu menekan tombol "Bayar".
+ * Endpoint checkout QRIS-only via Midtrans Core API (non-popup, non-Snap).
  *
  * Charge ke Midtrans dilakukan oleh chargeCoreTransaction() di lib/midtrans.js
  * (memakai library resmi `midtrans-client`, struktur switch-case per metode).
  *
  * POST body:
  *   productId        {string}  — ID produk
- *   paymentMethod    {string}  — 'gopay_qris' | 'gopay' | 'bni_va' | 'bri_va' |
- *                                 'cimb_va' | 'permata_va' | 'mandiri_va'
  *   discord_username {string}  — wajib
  *   redeemCode       {string?} — opsional
  *
  * Response (success):
- *   { success, orderId, paymentMethod, paymentInfo, coreData, finalPrice, discountAmount }
+ *   { success, orderId, paymentMethod, paymentInfo, finalPrice, discountAmount }
  *
- *   paymentInfo berisi data SPESIFIK yang relevan untuk metode terpilih saja:
- *     - gopay_qris        → { qrImageUrl, qrString }
- *     - gopay              → { qrImageUrl, qrString, deeplinkUrl }
- *     - bni_va/bri_va/...  → { vaNumber, vaBank }
- *     - mandiri_va          → { billKey, billCode }
+ *   paymentInfo: { qrImageUrl, qrString }
  */
 
 import { ProductsAsync, OrdersAsync, RedeemCodesAsync } from '../../../lib/redis.js';
@@ -31,7 +23,7 @@ import {
   extractPaymentInfo,
   PAYMENT_METHOD_CONFIG,
 } from '../../../lib/midtrans.js';
-import { verifyToken } from '../../../lib/auth.js';
+import { verifyMinecraftPlayer, verifyToken } from '../../../lib/auth.js';
 import { webhookTransaction } from '../../../lib/discord.js';
 import { parse } from 'cookie';
 
@@ -44,14 +36,15 @@ export default async function handler(req, res) {
   if (!user || user.type !== 'player')
     return res.status(401).json({ success: false, message: 'Login terlebih dahulu' });
 
-  const { productId, paymentMethod, redeemCode, discord_username } = req.body || {};
+  const { productId, redeemCode, discord_username, is_gift, gift_username, gift_platform } = req.body || {};
+  const paymentMethod = 'gopay_qris';
 
   if (!productId)
     return res.status(400).json({ success: false, message: 'productId diperlukan' });
   if (!discord_username?.trim())
     return res.status(400).json({ success: false, message: 'Username Discord wajib diisi untuk klaim role' });
-  if (!paymentMethod || !PAYMENT_METHOD_CONFIG[paymentMethod])
-    return res.status(400).json({ success: false, message: `Metode pembayaran tidak valid: ${paymentMethod}` });
+  if (!PAYMENT_METHOD_CONFIG[paymentMethod])
+    return res.status(500).json({ success: false, message: 'QRIS belum dikonfigurasi' });
 
   try {
     // ── Validasi produk ──────────────────────────────────────────────────
@@ -61,10 +54,29 @@ export default async function handler(req, res) {
     if (!product.reward_trigger?.trim())
       return res.status(400).json({ success: false, message: 'Produk belum dikonfigurasi (reward_trigger kosong). Hubungi admin.' });
 
-    // ── Cek batas pembelian ──────────────────────────────────────────────
+    let recipient = {
+      username: user.username,
+      uuid: user.uuid || null,
+      rank: user.rank || 'default',
+      platform: user.platform === 'bedrock' ? 'bedrock' : 'java',
+    };
+    const isGift = is_gift === true;
+    if (isGift) {
+      const targetName = String(gift_username || '').trim();
+      const targetPlatform = gift_platform === 'bedrock' ? 'bedrock' : 'java';
+      if (!targetName) return res.status(400).json({ success:false, message:'Username penerima wajib diisi' });
+      const verified = await verifyMinecraftPlayer(targetName, targetPlatform);
+      if (!verified.success) return res.status(400).json({ success:false, message:verified.message });
+      if (String(verified.player.username).toLowerCase() === String(user.username).toLowerCase()) {
+        return res.status(400).json({ success:false, message:'Pilih player lain sebagai penerima gift' });
+      }
+      recipient = verified.player;
+    }
+
+    // ── Cek batas pembelian untuk player penerima ───────────────────────
     if (product.purchase_limit > 0) {
       const count = await OrdersAsync.purchaseCount(
-        user.username, product.id,
+        recipient.username, product.id,
         product.limit_scope || 'per_product', product.category_id
       );
       if (count >= product.purchase_limit)
@@ -105,9 +117,14 @@ export default async function handler(req, res) {
 
     await OrdersAsync.add({
       order_id:         orderId,
-      player_username:  user.username,
-      player_uuid:      user.uuid  || null,
-      player_rank:      user.rank  || null,
+      buyer_username:   user.username,
+      buyer_uuid:       user.uuid || null,
+      buyer_platform:   user.platform || 'java',
+      player_username:  recipient.username,
+      player_uuid:      recipient.uuid || null,
+      player_rank:      recipient.rank || null,
+      player_platform:  recipient.platform || 'java',
+      is_gift:          isGift,
       product_id:       product.id,
       category_id:      product.category_id,
       product_name:     product.name,
@@ -118,19 +135,11 @@ export default async function handler(req, res) {
       redeem_code:      usedCode,
       discord_username: discord_username.trim(),
       payment_status:   'pending',
-      payment_method:   paymentMethod,
+      payment_method:   'QRIS',
       plugin_notified:  false,
       plugin_queued:    false,
       expired_at:       expiredAt,
     });
-
-    // ── Discord webhook (pending) ────────────────────────────────────────
-    try {
-      const newOrder = await OrdersAsync.byId(orderId);
-      await webhookTransaction(newOrder);
-    } catch (e) {
-      console.error('[create-core] Discord pending error:', e.message);
-    }
 
     // ── Charge ke Midtrans Core API (switch-case per metode di lib/midtrans.js) ──
     const coreData = await chargeCoreTransaction({
@@ -145,8 +154,15 @@ export default async function handler(req, res) {
     const paymentInfo = extractPaymentInfo(coreData, paymentMethod);
     await OrdersAsync.update(orderId, {
       midtrans_transaction_id: coreData.transaction_id || orderId,
-      payment_info: paymentInfo,   // { vaNumber?, qrUrl?, deeplinkUrl?, billKey?, billCode? }
+      payment_info: paymentInfo,
     });
+
+    try {
+      const newOrder = await OrdersAsync.byId(orderId);
+      await webhookTransaction(newOrder);
+    } catch (e) {
+      console.error('[create-core] Discord pending error:', e.message);
+    }
 
     // Redeem code increment
     if (usedCode) await RedeemCodesAsync.increment(usedCode);
@@ -156,7 +172,6 @@ export default async function handler(req, res) {
       orderId,
       paymentMethod,
       paymentInfo,         // { vaNumber?, qrUrl?, deeplinkUrl?, billKey?, billCode? }
-      coreData,            // raw response untuk kebutuhan debug / tambahan
       finalPrice,
       discountAmount,
     });

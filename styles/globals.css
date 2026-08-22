@@ -6780,6 +6780,15 @@ body { background-attachment: scroll; }
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+.adm-login-form {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.adm-login-info-code {
+  color: var(--adm-mint) !important;
+  background: rgba(113,239,161,.08) !important;
+}
 .adm-login-wrap :focus-visible { outline-color: var(--adm-lime) !important; }
 
 /* V20 — Portrait product cards on desktop. auto-fill keeps each card at a

@@ -37,6 +37,13 @@ const PUBLIC_FIELDS = [
   'whatsapp_url',
   'tiktok_url',
   'youtube_url',
+  'instagram_url',
+  'testimonial_1_name',
+  'testimonial_1_text',
+  'testimonial_2_name',
+  'testimonial_2_text',
+  'testimonial_3_name',
+  'testimonial_3_text',
   'players_online',
   'maintenance_mode',
 ];

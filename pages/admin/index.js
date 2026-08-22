@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
 import ImageUpload from '../../components/ImageUpload';
@@ -10,7 +10,7 @@ const TABS = [
   { id:'categories',label:'Kategori',      icon:'folder-open'   },
   { id:'redeem',    label:'Redeem Code',   icon:'ticket'        },
   { id:'orders',    label:'Log Transaksi', icon:'receipt'       },
-  { id:'reports',   label:'Report',        icon:'flag'          },
+  { id:'leaderboard',label:'Leaderboard',  icon:'trophy'        },
   { id:'settings',  label:'Pengaturan',    icon:'gear'          },
 ];
 
@@ -25,20 +25,6 @@ const ORDER_STATUS_BADGE = {
   failed:    'admin-badge-red',
   expired:   'admin-badge-gray',
   cancelled: 'admin-badge-gray',
-};
-
-const TICKET_STATUS_BADGE = {
-  open:      'admin-badge-yellow',
-  in_review: 'admin-badge-blue',
-  resolved:  'admin-badge-green',
-  rejected:  'admin-badge-red',
-};
-
-const TICKET_STATUS_LABEL = { open:'Menunggu', in_review:'Review', resolved:'Selesai', rejected:'Ditolak' };
-
-const TICKET_TYPES = {
-  banding:'⚖️ Aju Banding', bug:'🐛 Report Bug',
-  report_player:'🚨 Report Pemain', lainnya:'📝 Lainnya',
 };
 
 const CATEGORY_COLOR_MAP = {
@@ -76,11 +62,10 @@ export default function AdminPanel() {
   const [prodSortSaving,  setProdSortSaving]  = useState(false);
   const [catSortSaving,   setCatSortSaving]   = useState(false);
   const [orders,       setOrders]       = useState([]);
-  const [tickets,      setTickets]      = useState([]);
+  const [leaderboard,  setLeaderboard]  = useState({voters:[],donors:[],voterConfigured:true,voterError:'',updatedAt:''});
   const [codes,        setCodes]        = useState([]);
   const [stats,        setStats]        = useState({total:0,success:0,pending:0,failed:0,revenue:0});
   const [orderFilter,  setOrderFilter]  = useState('all');
-  const [reportFilter, setReportFilter] = useState('all');
 
   const [showProductModal,  setShowProductModal]  = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -97,29 +82,29 @@ export default function AdminPanel() {
       if (['dashboard','products'].includes(tab))   { const r=await af('/api/admin/products');  if(r.success){ setProducts(r.products||[]); setProdSortDirty(false); } }
       if (['dashboard','categories'].includes(tab)) { const r=await af('/api/admin/categories');if(r.success){ setCategories(r.categories||[]); setCatSortDirty(false); } }
       if (['dashboard','orders'].includes(tab))     { const r=await af(`/api/admin/orders?status=${orderFilter}`); if(r.success){setOrders(r.orders||[]);if(r.stats)setStats(r.stats);} }
-      if (tab==='reports')                          { const r=await af(`/api/admin/support?status=${reportFilter}`); if(r.success) setTickets(r.tickets||[]); }
+      if (tab==='leaderboard')                      { const r=await af('/api/leaderboard?limit=10'); if(r.success) setLeaderboard(r); }
       if (tab==='redeem')                           { const r=await af('/api/admin/redeem'); if(r.success) setCodes(r.codes||[]); }
       if (tab==='settings')                         { const r=await af('/api/admin/settings'); if(r.success) setSettings(r.settings||{}); }
     } catch {}
     setLoading(false);
-  }, [af, orderFilter, reportFilter, tab]);
+  }, [af, orderFilter, tab]);
 
   useEffect(() => { if (localStorage.getItem('admin_token')) setLoggedIn(true); }, []);
   useEffect(() => { if (loggedIn) load(); }, [loggedIn, load]);
 
-  // Realtime polling untuk tab reports dan orders (setiap 10 detik)
+  // Polling ringan hanya untuk data yang dapat berubah tanpa reload halaman.
   useEffect(() => {
     if (!loggedIn) return;
-    const REALTIME_TABS = ['reports', 'orders', 'dashboard'];
+    const REALTIME_TABS = ['leaderboard', 'orders', 'dashboard'];
     if (!REALTIME_TABS.includes(tab)) return;
     const iv = setInterval(async () => {
       try {
-        if (tab === 'reports') { const r=await af(`/api/admin/support?status=${reportFilter}`); if(r.success) setTickets(r.tickets||[]); }
+        if (tab === 'leaderboard') { const r=await af('/api/leaderboard?limit=10'); if(r.success) setLeaderboard(r); }
         if (tab === 'orders' || tab === 'dashboard') { const r=await af(`/api/admin/orders?status=${orderFilter}`); if(r.success){setOrders(r.orders||[]);if(r.stats)setStats(r.stats);} }
       } catch {}
-    }, 10000);
+    }, 30000);
     return () => clearInterval(iv);
-  }, [af, loggedIn, tab, orderFilter, reportFilter]);
+  }, [af, loggedIn, tab, orderFilter]);
 
   const login = async e => {
     e.preventDefault(); setLLoading(true); setLError('');
@@ -147,7 +132,7 @@ export default function AdminPanel() {
             <div className="adm-login-brandmark"><img src="/fancy-network-logo.webp" alt="Fancy Network" /></div>
             <span className="adm-login-eyebrow">CONTROL CENTER</span>
             <h1 className="adm-login-title">Fancy Network Admin</h1>
-            <p className="adm-login-subtitle">Kelola store, transaksi, ticket, dan konfigurasi server dari satu tempat.</p>
+            <p className="adm-login-subtitle">Kelola store, transaksi, leaderboard, dan konfigurasi server dari satu tempat.</p>
           </div>
 
           {/* Info box */}
@@ -573,12 +558,13 @@ export default function AdminPanel() {
                 <div className="admin-card adm-table-card">
                   <div className="adm-table-scroll">
                     <table className="admin-table min-w-[820px]">
-                      <thead><tr>{['Order ID','Player','Discord','Produk','Total','Status','Plugin','Tanggal','Aksi'].map(h=><th key={h}>{h}</th>)}</tr></thead>
+                      <thead><tr>{['Order ID','Pembeli','Penerima','Discord','Produk','Total','Status','Plugin','Tanggal','Aksi'].map(h=><th key={h}>{h}</th>)}</tr></thead>
                       <tbody>
                         {orders.map(o=>(
                           <tr key={o.order_id}>
                             <td><code className="adm-order-id-code">{o.order_id}</code></td>
-                            <td className="adm-cell-name">{o.player_username}</td>
+                            <td className="adm-cell-name">{o.buyer_username||o.player_username}</td>
+                            <td className="adm-cell-name">{o.player_username}{o.is_gift&&<small className="adm-gift-label">GIFT</small>}</td>
                             <td className="adm-td-discord">{o.discord_username||<span className="adm-td-muted">—</span>}</td>
                             <td className="adm-td-truncate">{o.product_name}</td>
                             <td className="adm-cell-price whitespace-nowrap">{idr(o.amount)}</td>
@@ -611,40 +597,34 @@ export default function AdminPanel() {
               </div>
             )}
 
-            {/* ═══ REPORTS ═════════════════════════════════ */}
-            {tab==='reports' && (
+            {/* ═══ LEADERBOARD ═════════════════════════════ */}
+            {tab==='leaderboard' && (
               <div className="adm-stack">
-                {/* Filter + Cleanup button */}
-                <div className="adm-filter-row">
-                  {['all','open','in_review','resolved','rejected'].map(s=>(
-                    <button key={s} onClick={()=>setReportFilter(s)}
-                      className={cx('adm-filter-btn', reportFilter===s && 'active')}>
-                      {s==='all'?'SEMUA':TICKET_STATUS_LABEL[s]?.toUpperCase()||s.toUpperCase()}
-                    </button>
-                  ))}
-                  {/* Manual cleanup trigger */}
-                  <button className="btn-ghost-fn ml-auto text-xs"
-                    onClick={async()=>{
-                      const r = await af('/api/cron/cleanup',{method:'POST'});
-                      if(r.success) { toast.success(r.message||'Cleanup selesai'); load(); }
-                      else toast.error(r.message||'Cleanup gagal');
-                    }}>
-                    <Icon name="broom" size={13} className="fn-icon-mr"/> Jalankan Cleanup
-                  </button>
+                <div className="adm-settings-head">
+                  <div>
+                    <h2 className="font-space adm-settings-title"><Icon name="trophy" size={16} color="var(--primary)" className="fn-icon-mr-8"/>Leaderboard Komunitas</h2>
+                    <p className="adm-settings-desc">Top Voter berasal dari API MinecraftMP/plugin. Top Donatur dihitung dari transaksi sukses.</p>
+                  </div>
+                  <button className="btn-ghost-fn text-xs" onClick={load} disabled={loading}><Icon name="rotate" size={13} spin={loading} className="fn-icon-mr"/> Perbarui</button>
                 </div>
-
-                {tickets.length===0 ? (
-                  <div className="adm-empty-block">
-                    <Icon name="inbox" size={36} className="adm-empty-icon"/>
-                    <p>Belum ada tiket {reportFilter!=='all'&&`(${reportFilter})`}</p>
-                  </div>
-                ) : (
-                  <div className="adm-stack">
-                    {tickets.map(tk=>(
-                      <TicketCard key={tk.ticket_id} tk={tk} af={af} onRefresh={load}/>
-                    ))}
-                  </div>
-                )}
+                <div className="adm-leaderboard-grid">
+                  {[
+                    {key:'voters',title:'Top Voter MinecraftMP',valueLabel:item=>`${Number(item.value||0).toLocaleString('id-ID')} vote`},
+                    {key:'donors',title:'Top Donatur',valueLabel:item=>idr(item.value)},
+                  ].map(board=>(
+                    <section key={board.key} className="admin-card adm-leaderboard-board">
+                      <h3>{board.title}</h3>
+                      {(leaderboard[board.key]||[]).length ? (leaderboard[board.key]||[]).map(item=>(
+                        <div key={`${board.key}-${item.rank}`} className="adm-leaderboard-row">
+                          <b>{item.rank}</b>
+                          <span>{item.username}</span>
+                          <strong>{board.valueLabel(item)}</strong>
+                        </div>
+                      )) : <div className="adm-empty-block"><Icon name="inbox" size={28} className="adm-empty-icon"/><p>{board.key==='voters' ? (leaderboard.voterError||'Belum ada data voter') : 'Belum ada transaksi sukses'}</p></div>}
+                    </section>
+                  ))}
+                </div>
+                <p className="adm-field-hint">Diperbarui: {leaderboard.updatedAt ? fmt(leaderboard.updatedAt) : '-'}</p>
               </div>
             )}
 
@@ -714,6 +694,28 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
+                  <div className="adm-settings-box plain">
+                    <h3 className="font-space adm-settings-box-title plain">
+                      <Icon name="link" size={13} className="fn-icon-mr"/>SOSIAL, VOTE &amp; KONTAK
+                    </h3>
+                    <p className="adm-settings-desc">Link ini tampil di Home dan Footer. Nilai di panel admin akan diprioritaskan di atas fallback env.</p>
+                    <div className="adm-settings-fields-grid">
+                      {[
+                        ['discord_url','Discord','https://discord.gg/...'],
+                        ['whatsapp_url','WhatsApp','https://wa.me/628...'],
+                        ['vote_url','Vote MinecraftMP','https://minecraft-mp.com/server/.../vote/'],
+                        ['instagram_url','Instagram','https://instagram.com/...'],
+                        ['tiktok_url','TikTok','https://tiktok.com/@...'],
+                        ['youtube_url','YouTube','https://youtube.com/@...'],
+                      ].map(([key,lbl,ph])=>(
+                        <div key={key}>
+                          <label className="adm-settings-field-label">{lbl}</label>
+                          <input className="admin-input" type="url" value={settings[key]||''} placeholder={ph} onChange={e=>setSettings(s=>({...s,[key]:e.target.value}))}/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Save button */}
                   <button
                     className="btn-primary-fn adm-settings-submit"
@@ -748,192 +750,6 @@ export default function AdminPanel() {
   );
 }
 
-// ── TicketCard ────────────────────────────────────────────────
-function TicketCard({ tk, af, onRefresh }) {
-  const [expanded,  setExpanded]  = useState(false);
-  const [liveTicket, setLiveTicket] = useState(tk);
-  const [msg,       setMsg]       = useState('');
-  const [sending,   setSending]   = useState(false);
-  const [timeLeft,  setTimeLeft]  = useState(null);  // detik tersisa sebelum cleanup
-  const msgEndRef = useRef(null);
-
-  const tInfo = {
-    banding:{icon:'gavel',color:'#e67e22'}, bug:{icon:'bug',color:'#3498db'},
-    report_player:{icon:'user-xmark',color:'#e74c3c'}, lainnya:{icon:'comment-dots',color:'#9b59b6'},
-  }[liveTicket.type] || {icon:'ticket',color:'var(--primary)'};
-
-  const st = {
-    open:{label:'Menunggu',color:'#f1c40f'}, in_review:{label:'Review',color:'#3498db'},
-    resolved:{label:'Selesai',color:'#2ecc71'}, rejected:{label:'Ditolak',color:'#e74c3c'},
-    expired:{label:'Expired',color:'#95a5a6'},
-  }[liveTicket.status] || {label:liveTicket.status,color:'#8e8e9a'};
-
-  useEffect(() => { setLiveTicket(tk); }, [tk]);
-
-  // Saat chat admin dibuka, sinkronkan balasan Discord setiap 5 detik.
-  useEffect(() => {
-    if (!expanded || !liveTicket.ticket_id) return undefined;
-    let active = true;
-    const sync = async () => {
-      try {
-        const result = await af(`/api/admin/support?id=${encodeURIComponent(liveTicket.ticket_id)}`);
-        if (active && result?.success && result.ticket) setLiveTicket(result.ticket);
-      } catch {}
-    };
-    sync();
-    const interval = window.setInterval(sync, 5000);
-    return () => { active = false; window.clearInterval(interval); };
-  }, [af, expanded, liveTicket.ticket_id]);
-
-  // Hitung countdown 2 menit untuk closed ticket
-  useEffect(() => {
-    if (!liveTicket.closed_at) { setTimeLeft(null); return; }
-    const closedMs  = new Date(liveTicket.closed_at).getTime();
-    const TWO_MIN   = 2 * 60 * 1000;
-    const tick = () => {
-      const left = Math.max(0, TWO_MIN - (Date.now() - closedMs));
-      setTimeLeft(left);
-    };
-    tick();
-    const iv = setInterval(tick, 1000);
-    return () => clearInterval(iv);
-  }, [liveTicket.closed_at]);
-
-  // Scroll ke pesan terbaru saat expand
-  useEffect(() => {
-    if (expanded && msgEndRef.current) {
-      msgEndRef.current.scrollIntoView({ behavior:'smooth' });
-    }
-  }, [expanded, liveTicket.messages?.length]);
-
-  const sendMsg = async () => {
-    if (!msg.trim() || sending) return;
-    setSending(true);
-    await af('/api/admin/support', { method:'PATCH', body:JSON.stringify({ id:liveTicket.ticket_id, message:msg.trim() }) });
-    setSending(false);
-    setMsg('');
-    onRefresh();
-  };
-
-  const cancelCleanup = async () => {
-    await af('/api/admin/support', { method:'PATCH', body:JSON.stringify({ id:liveTicket.ticket_id, cancel_cleanup:true }) });
-    toast.success('Auto-cleanup dibatalkan');
-    onRefresh();
-  };
-
-  const fmtTime = secs => {
-    if (secs === null) return '';
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${String(s).padStart(2,'0')}`;
-  };
-
-  const isClosed = liveTicket.status === 'resolved' || liveTicket.status === 'rejected';
-  const msgs = liveTicket.messages || [];
-
-  return (
-    <div className={cx('admin-card adm-ticket-card', isClosed && liveTicket.closed_at && 'closing')}>
-
-      {/* Countdown cleanup banner */}
-      {isClosed && liveTicket.closed_at && timeLeft !== null && (
-        <div className="adm-cleanup-banner">
-          <div className="adm-cleanup-left">
-            <Icon name="clock" size={13} color="#e74c3c" className="fn-icon-mr-4"/>
-            {timeLeft > 0
-              ? <span className="adm-cleanup-text">
-                  Auto-cleanup dalam <strong>{fmtTime(Math.ceil(timeLeft/1000))}</strong> — arsip akan dikirim ke webhook
-                </span>
-              : <span className="adm-cleanup-waiting">Menunggu cleanup job...</span>
-            }
-          </div>
-          {timeLeft > 0 && (
-            <button onClick={cancelCleanup} className="adm-cleanup-cancel-btn">
-              ✕ Batalkan
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="adm-ticket-head">
-        <div className="adm-ticket-head-left">
-          <div className="adm-ticket-icon" style={{'--c': `${tInfo.color}18`}}>
-            <Icon name={tInfo.icon} size={14} color={tInfo.color}/>
-          </div>
-          <div className="min-w-0">
-            <p className="adm-ticket-subject">{liveTicket.subject}</p>
-            <div className="adm-ticket-meta">
-              <code className="adm-ticket-meta-text adm-mono">{liveTicket.ticket_id}</code>
-              <span className="adm-ticket-meta-text">·</span>
-              <span className="adm-ticket-player">{liveTicket.player_username}</span>
-              <span className="adm-ticket-meta-text">·</span>
-              <span className="adm-ticket-meta-text">{fmt(liveTicket.created_at)}</span>
-              {msgs.length > 0 && <span className="adm-ticket-msgcount-badge">{msgs.length} pesan</span>}
-              {liveTicket.discord_channel_id && <span className="adm-ticket-msgcount-badge">Discord sync</span>}
-            </div>
-          </div>
-        </div>
-        <div className="adm-ticket-head-right">
-          <button onClick={()=>setExpanded(!expanded)} className="adm-ticket-toggle-btn">
-            <Icon name={expanded?'chevron-up':'chevron-down'} size={10}/>
-            {expanded ? 'Tutup' : 'Buka Chat'}
-          </button>
-          <select value={liveTicket.status} onChange={async e=>{
-            await af('/api/admin/support',{method:'PATCH',body:JSON.stringify({id:liveTicket.ticket_id,status:e.target.value})});
-            toast.success('Status diupdate'); onRefresh();
-          }} className="adm-ticket-status-select" style={{'--c': st.color}}>
-            <option value="open">Menunggu</option>
-            <option value="in_review">Review</option>
-            <option value="resolved">Selesai</option>
-            <option value="rejected">Ditolak</option>
-          </select>
-        </div>
-      </div>
-
-      {liveTicket.target_player && <p className="adm-ticket-target"><Icon name="user-xmark" size={12} className="fn-icon-mr"/>Target: <strong>{liveTicket.target_player}</strong></p>}
-      {liveTicket.evidence_url  && <a href={liveTicket.evidence_url} target="_blank" rel="noopener noreferrer" className="adm-ticket-evidence-link"><Icon name="link" size={12} className="fn-icon-mr"/>Lihat Bukti</a>}
-
-      {/* Chat area - expanded */}
-      {expanded && (
-        <div className="adm-chat-wrap">
-          {/* Messages */}
-          <div className="adm-chat-messages">
-            {msgs.length === 0 && <p className="adm-chat-empty">Belum ada percakapan</p>}
-            {msgs.map((m,i) => {
-              const isAdmin = m.sender_type === 'admin';
-              return (
-                <div key={m.id||i} className={cx('adm-chat-row', isAdmin && 'admin')}>
-                  <div className={cx('adm-chat-bubble', isAdmin && 'admin')}>
-                    <p className={cx('adm-chat-sender', isAdmin && 'admin')}>
-                      {isAdmin ? '👑 Admin' : `👤 ${m.sender}`}
-                    </p>
-                    <p className="adm-chat-text">{m.text}</p>
-                  </div>
-                  <span className="adm-chat-time">{fmt(m.created_at)}</span>
-                </div>
-              );
-            })}
-            <div ref={msgEndRef}/>
-          </div>
-
-          {/* Reply input */}
-          {!isClosed && (
-            <div className="adm-chat-input-row">
-              <textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={2}
-                onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }}
-                placeholder="Tulis balasan... (Enter kirim, Shift+Enter baris baru)"
-                className="admin-input adm-chat-textarea"/>
-              <button disabled={sending||!msg.trim()} className="btn-primary-fn adm-chat-send-btn" onClick={sendMsg}>
-                {sending ? <Icon name="spinner" size={13} spin/> : <><Icon name="paper-plane" size={13} className="fn-icon-mr"/> Kirim</>}
-              </button>
-            </div>
-          )}
-          {isClosed && <p className="adm-chat-closed-note">Tiket ditutup — tidak bisa membalas</p>}
-        </div>
-      )}
-    </div>
-  );
-}
 // ── MODAL helpers ─────────────────────────────────────────────
 function ModalWrap({ title, onClose, children }) {
   return (

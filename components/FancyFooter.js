@@ -18,13 +18,15 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
   const javaIp = s.server_ip || 'play.fancynet.my.id';
   const bedrockIp = s.bedrock_ip || javaIp;
   const bedrockPort = String(s.bedrock_port || '19026');
-  const resolvedDiscord = safeUrl(s.discord_url || discordUrl);
+  const resolvedDiscord = safeUrl(s.discord_url || discordUrl || process.env.NEXT_PUBLIC_DISCORD_URL);
+  const resolvedWhatsApp = safeUrl(s.whatsapp_url || process.env.NEXT_PUBLIC_WHATSAPP_URL);
 
   const socials = [
     { href: resolvedDiscord, label: 'Discord', icon: 'discord' },
-    { href: safeUrl(s.whatsapp_url), label: 'WhatsApp', icon: 'whatsapp' },
-    { href: safeUrl(s.tiktok_url), label: 'TikTok', icon: 'tiktok' },
-    { href: safeUrl(s.youtube_url), label: 'YouTube', icon: 'youtube' },
+    { href: resolvedWhatsApp, label: 'WhatsApp', icon: 'whatsapp' },
+    { href: safeUrl(s.instagram_url || process.env.NEXT_PUBLIC_INSTAGRAM_URL), label: 'Instagram', icon: 'instagram' },
+    { href: safeUrl(s.tiktok_url || process.env.NEXT_PUBLIC_TIKTOK_URL), label: 'TikTok', icon: 'tiktok' },
+    { href: safeUrl(s.youtube_url || process.env.NEXT_PUBLIC_YOUTUBE_URL), label: 'YouTube', icon: 'youtube' },
   ].filter(item => item.href);
 
   return (
@@ -35,7 +37,7 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
             <span className="public-footer-logo">{s.logo_url ? <img src={s.logo_url} alt="" width={64} height={64} loading="lazy" decoding="async" /> : <LogoImage alt="" loading="lazy" />}</span>
             <div><strong>{serverName}</strong><small>Survival Economy · Java &amp; Bedrock</small></div>
           </div>
-          <p>Server Minecraft Indonesia dengan progression semi-RPG, ekonomi aktif, transaksi otomatis, dan support yang terhubung ke Discord.</p>
+          <p>Server Minecraft Indonesia dengan progression semi-RPG, ekonomi aktif, transaksi otomatis, dan komunitas yang terhubung lewat Discord.</p>
           {socials.length > 0 && (
             <div className="public-footer-socials">
               {socials.map(item => (
@@ -59,15 +61,14 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
             <strong>Navigasi</strong>
             <Link href="/">Home</Link>
             <Link href="/store">Store</Link>
-            <Link href="/support">Support</Link>
-            {safeUrl(s.vote_url) && <a href={safeUrl(s.vote_url)} target="_blank" rel="noopener noreferrer">Vote server</a>}
+            <Link href="/leaderboard">Leaderboard</Link>
+            {safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL) && <a href={safeUrl(s.vote_url || process.env.NEXT_PUBLIC_VOTE_URL)} target="_blank" rel="noopener noreferrer">Vote MinecraftMP</a>}
           </div>
           <div className="public-footer-column">
             <strong>Bantuan</strong>
-            <Link href="/support">Buat ticket</Link>
-            <Link href="/support?view=tickets">Ticket saya</Link>
             {resolvedDiscord && <a href={resolvedDiscord} target="_blank" rel="noopener noreferrer">Discord community</a>}
-            <span>Balasan tersedia lewat web atau Discord.</span>
+            {resolvedWhatsApp && <a href={resolvedWhatsApp} target="_blank" rel="noopener noreferrer">WhatsApp admin</a>}
+            <span>Bantuan dipusatkan melalui Discord dan WhatsApp.</span>
           </div>
         </div>
       </div>
@@ -79,7 +80,7 @@ export default function FancyFooter({ serverName = 'Fancy Network', discordUrl =
         </div>
         <div className="public-footer-cta-actions">
           <Link href="/store" className="public-footer-primary-action">BUKA STORE <Icon name="arrow-right" size={15} /></Link>
-          <Link href="/support" className="public-footer-secondary-action">BUAT TICKET <Icon name="comment-dots" size={15} /></Link>
+          <Link href="/leaderboard" className="public-footer-secondary-action">LIHAT LEADERBOARD <Icon name="trophy" size={15} /></Link>
         </div>
       </div>
 

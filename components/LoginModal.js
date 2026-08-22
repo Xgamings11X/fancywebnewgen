@@ -145,7 +145,7 @@ export default function LoginModal({ onClose, onSuccess, product }) {
           <p>Login memakai akun Minecraft yang sudah pernah masuk ke server. Tidak membutuhkan password Minecraft.</p>
           <ul>
             <li><Icon name="circle-check" size={16} /> Beli rank dan item</li>
-            <li><Icon name="circle-check" size={16} /> Buat serta balas ticket</li>
+            <li><Icon name="circle-check" size={16} /> Belanja dan kirim gift dengan aman</li>
             <li><Icon name="circle-check" size={16} /> Java dan Bedrock didukung</li>
           </ul>
           {product && (

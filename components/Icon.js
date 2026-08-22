@@ -2,7 +2,7 @@
  * components/Icon.js — Pengganti FontAwesome dengan inline SVG murni
  *
  * Semua ikon adalah stroke-based (Lucide-style, viewBox 0 0 24 24, strokeWidth=2),
- * kecuali brand icons (Discord, WhatsApp, TikTok, YouTube) yang fill-based.
+ * kecuali brand icons (Discord, WhatsApp, Instagram, TikTok, YouTube) yang fill-based.
  *
  * Penggunaan:
  *   <Icon name="arrow-right" />
@@ -144,6 +144,8 @@ const PATHS = {
                    '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>'],
   'credit-card':  ['<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>',
                    '<line x1="1" y1="10" x2="23" y2="10"/>'],
+  'gift':         ['<rect x="3" y="8" width="18" height="13" rx="2"/>',
+                   '<path d="M12 8v13M3 12h18M7.5 8C5 8 4 6.8 4 5.5S5 3 6.5 3C9 3 12 8 12 8M16.5 8C19 8 20 6.8 20 5.5S19 3 17.5 3C15 3 12 8 12 8"/>'],
   'file-pdf':     ['<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>',
                    '<polyline points="14 2 14 8 20 8"/>',
                    '<path d="M12 18v-6"/>',
@@ -201,6 +203,7 @@ const PATHS = {
   // ── Brand Icons (fill-based) ─────────────────────────────────────
   'discord':  null, // rendered in renderIcon
   'whatsapp': null, // rendered in renderIcon
+  'instagram': null, // rendered in renderIcon
   'tiktok':   null, // rendered in renderIcon
   'youtube':  null, // rendered in renderIcon
 };
@@ -237,6 +240,10 @@ function renderIcon(name, color) {
       return (
         <path fill={color || 'currentColor'} stroke="none" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.95a8.2 8.2 0 0 0 4.8 1.54V7.07a4.85 4.85 0 0 1-1.03-.38z"/>
       );
+    case 'instagram':
+      return (
+        <path fill={color || 'currentColor'} stroke="none" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.25-3.1a1.17 1.17 0 1 1 0 2.34 1.17 1.17 0 0 1 0-2.34z"/>
+      );
     case 'youtube':
       return (
         <path fill={color || 'currentColor'} stroke="none" d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>
@@ -257,7 +264,7 @@ function renderIcon(name, color) {
  */
 export default function Icon({ name, size = 16, color, spin = false, style, className }) {
   const paths = PATHS[name];
-  const isBrand = ['discord','whatsapp','tiktok','youtube'].includes(name);
+  const isBrand = ['discord','whatsapp','instagram','tiktok','youtube'].includes(name);
   const isCircle = name === 'circle';
 
   const svgStyle = {

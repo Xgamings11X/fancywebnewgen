@@ -42,10 +42,7 @@ export default async function handler(req, res) {
     // status transaksi SUCCESS/SETTLEMENT. Untuk pending/deny/expire,
     // payment_method TIDAK disentuh sama sekali.
     //
-    // BUG LAMA: `order.payment_method ? {} : {...}` tidak pernah ke-trigger
-    // karena payment_method di-set 'midtrans_snap' (truthy) sejak order dibuat
-    // di pages/api/orders/create.js — akibatnya field ini tidak pernah ter-update
-    // ke metode spesifik walau transaksi sudah sukses.
+    // Metode final selalu diambil dari notifikasi resmi Midtrans.
     const isSuccess    = finalStatus === 'success';
     const methodUpdate = isSuccess ? { payment_method: formatPaymentMethod(n) } : {};
 
@@ -89,6 +86,8 @@ export default async function handler(req, res) {
         const r = await notifyTransaction({
           transaction_id: order.order_id,
           player_name:    order.player_username || '',
+          player_uuid:    order.player_uuid || null,
+          player_platform: order.player_platform || 'java',
           product_id:     order.reward_trigger || String(order.product_id),
           amount:         order.amount,
           status:         'success',

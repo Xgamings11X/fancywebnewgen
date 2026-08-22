@@ -48,14 +48,6 @@ module.exports = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
         ],
       },
-      // SSE endpoint khusus
-      {
-        source: '/api/support/events',
-        headers: [
-          { key: 'Cache-Control',     value: 'no-cache' },
-          { key: 'X-Accel-Buffering', value: 'no' },
-        ],
-      },
       // Security headers semua halaman
       {
         source: '/(.*)',
@@ -66,5 +58,8 @@ module.exports = {
         ],
       },
     ];
+  },
+  async redirects() {
+    return [{ source: '/support', destination: '/leaderboard', permanent: true }];
   },
 };

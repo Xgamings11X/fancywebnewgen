@@ -3,21 +3,9 @@
  *
  * Modal checkout. Alurnya:
  *  1. Pemain isi Username Discord (wajib, untuk klaim role) + kode redeem (opsional)
- *  2. Klik "Bayar Sekarang" → POST /api/orders/create → order dibuat (status: pending)
- *     dan snapToken-nya sudah ikut disimpan di order tsb.
- *  3. Langsung diarahkan ke /invoice/[orderId]?autopay=1 — popup pembayaran
- *     RESMI Midtrans (Snap.js) baru dibuka DI HALAMAN INVOICE itu
- *     (lihat pages/invoice/[orderId].js), bukan di sini.
- *
- *     Kenapa dipindah ke invoice dulu, bukan dibuka langsung di modal ini:
- *     order sudah pasti tersimpan & punya halaman permanen sebelum popup
- *     dibuka, jadi kalau Snap.js gagal dimuat (internet putus-putus / ad-blocker)
- *     pemain tidak "nyasar" — mereka tetap di halaman invoice (status: pending)
- *     dan tinggal klik "Bayar Sekarang" lagi di sana untuk retry, bukan
- *     kehilangan jejak order-nya di tengah modal checkout.
- *  4. Setelah pembayaran selesai di popup, halaman invoice yang sama otomatis
- *     berubah jadi status "success" (lewat verifikasi + polling), tanpa
- *     perlu redirect lagi.
+ *  2. Opsional: pilih gift lalu verifikasi penerima langsung ke plugin.
+ *  3. Klik "Bayar" → Midtrans Core membuat transaksi QRIS-only.
+ *  4. Invoice menampilkan QR, lalu status diperbarui otomatis setelah pembayaran.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -43,6 +31,11 @@ export default function CartModal({ product, player, onClose }) {
   const [codeError,       setCodeError]        = useState('');
   const [loading,         setLoading]          = useState(false);
   const [error,           setError]            = useState('');
+  const [isGift,          setIsGift]           = useState(false);
+  const [giftUsername,    setGiftUsername]     = useState('');
+  const [giftPlatform,    setGiftPlatform]     = useState('java');
+  const [giftPlayer,      setGiftPlayer]       = useState(null);
+  const [giftChecking,    setGiftChecking]     = useState(false);
 
   const finalPrice = applied?.finalPrice ?? product.price;
   const discount    = applied?.discountAmount ?? 0;
@@ -108,10 +101,11 @@ export default function CartModal({ product, player, onClose }) {
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (!discordUsername.trim()) { setError('Username Discord wajib diisi'); return; }
+    if (isGift && !giftPlayer) { setError('Periksa dan konfirmasi player penerima terlebih dahulu'); return; }
     setLoading(true); setError('');
 
     try {
-      const res  = await fetch('/api/orders/create', {
+      const res  = await fetch('/api/orders/create-core', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -119,6 +113,9 @@ export default function CartModal({ product, player, onClose }) {
           productId:        product.id,
           discord_username: discordUsername.trim(),
           redeemCode:       applied?.code || undefined,
+          is_gift:          isGift,
+          gift_username:    isGift ? giftPlayer?.username : undefined,
+          gift_platform:    isGift ? giftPlatform : undefined,
         }),
       });
       const data = await res.json();
@@ -131,10 +128,7 @@ export default function CartModal({ product, player, onClose }) {
 
       const { orderId } = data;
 
-      // Order sudah dibuat (status: pending) — arahkan ke halaman invoice dulu.
-      // Popup Midtrans Snap akan otomatis terbuka DI SANA (lihat efek "autopay"
-      // di pages/invoice/[orderId].js) begitu halamannya selesai dimuat.
-      router.push(`/invoice/${orderId}?autopay=1`);
+      router.push(`/invoice/${orderId}`);
       return;
 
     } catch (e2) {
@@ -143,6 +137,23 @@ export default function CartModal({ product, player, onClose }) {
       return;
     }
     setLoading(false);
+  };
+
+  const checkGiftPlayer = async () => {
+    if (!giftUsername.trim()) return;
+    setGiftChecking(true); setGiftPlayer(null); setError('');
+    try {
+      const response = await fetch('/api/plugin/check-player', {
+        method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ username:giftUsername.trim(), platform:giftPlatform }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.message || 'Player tidak ditemukan');
+      if (String(result.player.username).toLowerCase() === String(player?.username || '').toLowerCase()) throw new Error('Pilih player lain sebagai penerima gift');
+      setGiftPlayer(result.player);
+      toast.success(`Penerima ${result.player.displayName || result.player.username} terverifikasi`);
+    } catch (checkError) { setError(checkError.message || 'Gagal memeriksa player'); }
+    setGiftChecking(false);
   };
 
   return (
@@ -170,7 +181,7 @@ export default function CartModal({ product, player, onClose }) {
             <Icon name="cart-shopping" size={18} color="var(--primary)"/>
             <div className="cart-summary-info">
               <p className="cart-summary-name">{product.name}</p>
-              {player && <p className="cart-summary-for">untuk {player.displayName || player.username}</p>}
+              {player && <p className="cart-summary-for">untuk {isGift && giftPlayer ? (giftPlayer.displayName || giftPlayer.username) : (player.displayName || player.username)}</p>}
             </div>
             <div className="cart-summary-price-wrap">
               {discount > 0 && (
@@ -189,6 +200,25 @@ export default function CartModal({ product, player, onClose }) {
           )}
 
           <form onSubmit={handleCheckout}>
+            <div className="cart-gift-box">
+              <button type="button" className={`cart-gift-toggle${isGift ? ' active' : ''}`} onClick={()=>{setIsGift(v=>!v);setGiftPlayer(null);setError('');}} disabled={loading}>
+                <span><Icon name="gift" size={16}/></span>
+                <div><strong>Gift untuk player lain</strong><small>Produk akan dikirim ke akun Minecraft penerima.</small></div>
+                <i aria-hidden="true"/>
+              </button>
+              {isGift && (
+                <div className="cart-gift-fields">
+                  <div className="cart-platform-switch">
+                    {['java','bedrock'].map(platform=><button key={platform} type="button" className={giftPlatform===platform?'active':''} onClick={()=>{setGiftPlatform(platform);setGiftPlayer(null);}}>{platform === 'java' ? 'Java Edition' : 'Bedrock Edition'}</button>)}
+                  </div>
+                  <div className="cart-code-row">
+                    <input className="fn-input cart-code-input" value={giftUsername} onChange={e=>{setGiftUsername(e.target.value);setGiftPlayer(null);}} placeholder={giftPlatform==='bedrock'?'Nickname Bedrock':'Username Java'} maxLength={32} disabled={loading||giftChecking}/>
+                    <button type="button" className="btn-primary-fn cart-apply-btn" onClick={checkGiftPlayer} disabled={!giftUsername.trim()||giftChecking||loading}>{giftChecking?<span className="fn-spinner fn-spinner-sm"/>:'Periksa'}</button>
+                  </div>
+                  {giftPlayer && <div className="cart-gift-verified"><Icon name="circle-check" size={14}/><span><strong>{giftPlayer.displayName || giftPlayer.username}</strong><small>{giftPlatform === 'java' ? 'Java Edition' : 'Bedrock Edition'} · {giftPlayer.rank || 'default'}</small></span></div>}
+                </div>
+              )}
+            </div>
             {/* Discord username */}
             <div className="cart-field">
               <label className="cart-field-label">
@@ -223,10 +253,10 @@ export default function CartModal({ product, player, onClose }) {
             {/* Info strip */}
             <div className="cart-info-strip">
               <Icon name="lock" size={13} color="var(--primary)" className="cart-info-icon"/>
-              <span>Pembayaran diproses lewat popup resmi Midtrans — QRIS, GoPay, ShopeePay, dan VA Bank tersedia langsung di dalamnya.</span>
+              <span>Pembayaran aman melalui QRIS Midtrans. Kode QR akan langsung tersedia di halaman invoice.</span>
             </div>
 
-            <button type="submit" className="btn-primary-fn cart-submit-btn" disabled={loading || !discordUsername.trim()}>
+            <button type="submit" className="btn-primary-fn cart-submit-btn" disabled={loading || !discordUsername.trim() || (isGift && !giftPlayer)}>
               {loading
                 ? <><span className="fn-spinner fn-spinner-sm"/> Memproses...</>
                 : <><Icon name="lock" size={13} className="fn-icon-mr"/> Bayar {idr(finalPrice)}</>

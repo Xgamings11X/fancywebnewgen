@@ -42,7 +42,6 @@ export default async function handler(req, res) {
 
   const s          = settings || {};
   const serverName = s.server_name || 'Fancy Network';
-  const sName      = (serverName||'NETWORK').replace(/fancy/gi,'').trim()||'NETWORK';
 
   const idrFmt     = v => `Rp ${Number(v||0).toLocaleString('id-ID')}`;
   const subtotal   = (order.amount||0) + (order.discount_amount||0);
@@ -51,6 +50,7 @@ export default async function handler(req, res) {
   const statusLbl  = STATUS_LABEL[order.payment_status] || (order.payment_status||'').toUpperCase();
   const formatDate = iso => iso ? new Date(iso).toLocaleString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) + ' WIB' : '-';
   const [sr,sg,sb] = STATUS_COLORS[order.payment_status] || [107,114,128];
+  const statusHex = `#${[sr,sg,sb].map(value => Number(value).toString(16).padStart(2,'0')).join('')}`;
 
   // ── Coba ambil logo dari settings.logo_url ────────────────────
   let logoBuffer = null;
@@ -63,6 +63,15 @@ export default async function handler(req, res) {
     }
   }
 
+  let qrBuffer = null;
+  const qrUrl = order.payment_info?.qrImageUrl;
+  if (qrUrl && order.payment_status === 'pending') {
+    try {
+      const response = await fetch(qrUrl, { signal:AbortSignal.timeout(8000) });
+      if (response.ok) qrBuffer = Buffer.from(await response.arrayBuffer());
+    } catch (e) { console.error('[invoice-pdf] gagal ambil QRIS:', e.message); }
+  }
+
   const doc    = new PDFDocument({ size:'A4', margin:50, info:{ Title:`Invoice #${order.order_id}`, Author:`${serverName} Store` } });
   const chunks = [];
   doc.on('data', c => chunks.push(c));
@@ -70,13 +79,14 @@ export default async function handler(req, res) {
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="invoice-${order.order_id}.pdf"`);
+  res.setHeader('Cache-Control', 'private, no-store');
 
   doc.on('end', () => res.end(Buffer.concat(chunks)));
 
   const W      = doc.page.width - 100;
   const LEFT   = 50;
   const RIGHT  = doc.page.width - 50;
-  const ORANGE = '#FF6B00';
+  const ORANGE = '#168A52';
   const GRAY   = '#888888';
   const BLACK  = '#111111';
   const LINE   = '#EEEEEE';
@@ -85,17 +95,14 @@ export default async function handler(req, res) {
   if (logoBuffer) {
     try {
       doc.image(logoBuffer, LEFT, 45, { width:44, height:44, fit:[44,44] });
-      doc.fontSize(18).fillColor(ORANGE).font('Helvetica-Bold').text('FANCY', LEFT+54, 50, { continued:true })
-         .fillColor(BLACK).text(' '+sName.toUpperCase());
+        doc.fontSize(18).fillColor(BLACK).font('Helvetica-Bold').text(serverName.toUpperCase(), LEFT+54, 50);
       doc.fontSize(10).fillColor(GRAY).font('Helvetica').text(serverName, LEFT+54, 74);
     } catch {
-      doc.fontSize(22).fillColor(ORANGE).font('Helvetica-Bold').text('FANCY', LEFT, 50, { continued:true })
-         .fillColor(BLACK).text(' '+sName.toUpperCase());
+      doc.fontSize(22).fillColor(BLACK).font('Helvetica-Bold').text(serverName.toUpperCase(), LEFT, 50);
       doc.fontSize(10).fillColor(GRAY).font('Helvetica').text(serverName, LEFT, 78);
     }
   } else {
-    doc.fontSize(22).fillColor(ORANGE).font('Helvetica-Bold').text('FANCY', LEFT, 50, { continued:true })
-       .fillColor(BLACK).text(' '+sName.toUpperCase());
+    doc.fontSize(22).fillColor(BLACK).font('Helvetica-Bold').text(serverName.toUpperCase(), LEFT, 50);
     doc.fontSize(10).fillColor(GRAY).font('Helvetica').text(serverName, LEFT, 78);
   }
 
@@ -103,7 +110,7 @@ export default async function handler(req, res) {
   doc.fontSize(11).fillColor(GRAY).font('Helvetica').text(`#${order.order_id}`, RIGHT-200, 82, { width:200, align:'right' });
 
   const badgeW = 110, badgeH = 22, badgeX = RIGHT - badgeW, badgeY = 95;
-  doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 4).fillAndStroke(`rgb(${sr},${sg},${sb})`, `rgb(${sr},${sg},${sb})`);
+  doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 4).fillAndStroke(statusHex, statusHex);
   doc.fillColor('#FFFFFF').fontSize(9).font('Helvetica-Bold')
      .text(statusLbl, badgeX, badgeY+6, { width:badgeW, align:'center' });
 
@@ -118,18 +125,18 @@ export default async function handler(req, res) {
   const col1X = LEFT, col2X = LEFT + W/2 + 10;
 
   doc.fontSize(8).fillColor(ORANGE).font('Helvetica-Bold')
-     .text('DITAGIH KEPADA', col1X, y, { characterSpacing:1 });
+     .text('PEMBELI', col1X, y, { characterSpacing:1 });
   y += 14;
-  doc.fontSize(12).fillColor(BLACK).font('Helvetica-Bold').text(order.player_username||'-', col1X, y);
+  doc.fontSize(12).fillColor(BLACK).font('Helvetica-Bold').text(order.buyer_username || order.player_username || '-', col1X, y);
   y += 16;
   if (order.discord_username) {
     doc.fontSize(10).fillColor(GRAY).font('Helvetica').text(`Discord: ${order.discord_username}`, col1X, y);
     y += 14;
   }
-  if (order.player_rank && order.player_rank !== 'default') {
-    doc.fontSize(10).fillColor(GRAY).font('Helvetica').text(`Rank: ${order.player_rank}`, col1X, y);
-    y += 14;
-  }
+  doc.fontSize(10).fillColor(GRAY).font('Helvetica').text(`${order.is_gift ? 'Penerima gift' : 'Penerima'}: ${order.player_username || '-'}`, col1X, y);
+  y += 14;
+  doc.fontSize(9).fillColor(GRAY).font('Helvetica').text(`Platform penerima: ${String(order.player_platform || 'java').toUpperCase()} | Rank: ${order.player_rank || 'default'}`, col1X, y, { width:W/2-15 });
+  y += 14;
 
   let ry = 158;
   doc.fontSize(8).fillColor(ORANGE).font('Helvetica-Bold')
@@ -160,7 +167,7 @@ export default async function handler(req, res) {
   doc.fontSize(8).fillColor(GRAY).font('Helvetica-Bold')
      .text('DESKRIPSI PRODUK', col.desc, y+8)
      .text('KATEGORI', col.cat, y+8)
-     .text('HARGA', col.price, y+8, { align:'right' });
+     .text('HARGA', LEFT, y+8, { width:W-8, align:'right' });
   y += 24;
 
   const rowH = 32;
@@ -171,7 +178,7 @@ export default async function handler(req, res) {
 
   const catLabel = order.category_name||'Produk';
   const catW = Math.min(catLabel.length*7+16, 100);
-  doc.roundedRect(col.cat, y+7, catW, 18, 3).fillColor('#FFF3E8').fill();
+  doc.roundedRect(col.cat, y+7, catW, 18, 3).fillColor('#ECFDF3').fill();
   doc.fontSize(9).fillColor(ORANGE).font('Helvetica-Bold').text(catLabel, col.cat+4, y+11, { width:catW-8, align:'center' });
 
   doc.fontSize(11).fillColor(BLACK).font('Helvetica-Bold')
@@ -195,7 +202,7 @@ export default async function handler(req, res) {
   // ── Summary ─────────────────────────────────────────────────
   const sumX = LEFT + W*0.55, sumW = W*0.45;
   const rows = [
-    ['Subtotal',              idrFmt(order.amount||0), BLACK],
+    ['Subtotal',              idrFmt(subtotal), BLACK],
     ...(discount>0 ? [['Diskon Redeem', `-${idrFmt(discount)}`, '#22A85A']] : []),
   ];
   for (const [lbl,val,color] of rows) {
@@ -220,11 +227,22 @@ export default async function handler(req, res) {
     y += 30;
   }
 
+  if (qrBuffer && y < 580) {
+    const boxY = y + 8;
+    doc.roundedRect(LEFT, boxY, W, 142, 8).fillColor('#F0FDF4').fill();
+    doc.fontSize(8).fillColor(ORANGE).font('Helvetica-Bold').text('PEMBAYARAN QRIS', LEFT+18, boxY+20, { characterSpacing:1 });
+    doc.fontSize(17).fillColor(BLACK).font('Helvetica-Bold').text('Pindai untuk membayar', LEFT+18, boxY+38);
+    doc.fontSize(9).fillColor(GRAY).font('Helvetica').text('Gunakan aplikasi bank atau e-wallet yang mendukung QRIS. Nominal pembayaran sudah terisi otomatis.', LEFT+18, boxY+64, { width:W-190, lineGap:2 });
+    doc.fontSize(14).fillColor(ORANGE).font('Helvetica-Bold').text(idrFmt(total), LEFT+18, boxY+102);
+    try { doc.image(qrBuffer, RIGHT-122, boxY+11, { width:120, height:120, fit:[120,120] }); } catch {}
+    y = boxY + 154;
+  }
+
   // ── Footer ──────────────────────────────────────────────────
   doc.moveTo(LEFT, y).lineTo(RIGHT, y).lineWidth(0.5).strokeColor(LINE).stroke();
   y += 10;
   doc.fontSize(8).fillColor(GRAY).font('Helvetica')
-     .text(`Dokumen ini digenerate otomatis oleh ${serverName} Store \u00b7 Simpan sebagai bukti pembayaran resmi.`, LEFT, y, { width:W, align:'center' });
+     .text(`Dokumen ini dibuat otomatis oleh ${serverName} Store. Simpan sebagai bukti pembayaran resmi.`, LEFT, y, { width:W, align:'center' });
 
   doc.end();
 }

@@ -7,7 +7,7 @@ import Icon from './Icon';
 const NAV_LINKS = [
   { href: '/', label: 'Home', icon: 'gamepad' },
   { href: '/store', label: 'Store', icon: 'cart-shopping' },
-  { href: '/support', label: 'Support', icon: 'comment-dots' },
+  { href: '/leaderboard', label: 'Leaderboard', icon: 'trophy' },
 ];
 
 export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
@@ -48,7 +48,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
     let timerId = null;
     const prefetchPublicRoutes = () => {
       if (!canPrefetch) return;
-      for (const href of ['/', '/store', '/support']) {
+      for (const href of ['/', '/store', '/leaderboard']) {
         if (href !== router.pathname) router.prefetch(href).catch(() => {});
       }
     };
@@ -146,7 +146,7 @@ export default function FancyNav({ player, onLoginClick, onLogout, settings }) {
                 <span><Icon name={link.icon} size={18} /></span>
                 <div>
                   <strong>{link.label}</strong>
-                  <small>{link.href === '/' ? 'Informasi server' : link.href === '/store' ? 'Rank dan item premium' : 'Buat dan cek tiket'}</small>
+                  <small>{link.href === '/' ? 'Informasi server' : link.href === '/store' ? 'Rank dan item premium' : 'Top voter dan donatur'}</small>
                 </div>
                 <Icon name="chevron-right" size={14} />
               </Link>
